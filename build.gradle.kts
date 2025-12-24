@@ -47,8 +47,9 @@ compose.desktop {
 
 tasks.register<Zip>("packagePortable") {
     group = "compose desktop"
-    description = "Packages the application as a portable zip (no installation required)"
-    from(tasks.named("createDistributable"))
-    archiveFileName.set("WFBarn-Portable-v${version}.zip")
-    destinationDirectory.set(layout.buildDirectory.dir("compose/binaries/main/portable"))
+    description = "Packages the application as a portable zip file."
+    dependsOn("createDistributable")
+    from("build/compose/binaries/main/app")
+    archiveFileName.set("WFBarn-portable.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("compose/binaries/main/zip"))
 }

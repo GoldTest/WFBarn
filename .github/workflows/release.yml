@@ -39,8 +39,8 @@ jobs:
             copy build/compose/binaries/main/msi/*.msi release-artifacts/
           }
           # Copy Portable Zip from the new task output
-          if (Test-Path build/compose/binaries/main/portable/*.zip) {
-            copy build/compose/binaries/main/portable/*.zip release-artifacts/
+          if (Test-Path build/compose/binaries/main/zip/*.zip) {
+            copy build/compose/binaries/main/zip/*.zip release-artifacts/
           }
 
       - name: Create Release
