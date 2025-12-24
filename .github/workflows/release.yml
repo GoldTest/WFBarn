@@ -25,7 +25,7 @@ jobs:
         run: git update-index --chmod=+x gradlew
 
       - name: Build and Package
-        run: ./gradlew packageExe packageMsi createDistributable
+        run: ./gradlew packageExe packageMsi packagePortable
 
       - name: Prepare Artifacts
         shell: pwsh
@@ -38,12 +38,10 @@ jobs:
           if (Test-Path build/compose/binaries/main/msi/*.msi) {
             copy build/compose/binaries/main/msi/*.msi release-artifacts/
           }
-          
-          # Create Portable (Green) version from Distributable
-          # The distributable is in build/compose/binaries/main/app
-          $distDir = "build/compose/binaries/main/app/WFBarn"
-          $zipPath = "release-artifacts/WFBarn-Portable-Windows.zip"
-          Compress-Archive -Path "$distDir\*" -DestinationPath $zipPath
+          # Copy Portable Zip from the new task output
+          if (Test-Path build/compose/binaries/main/portable/*.zip) {
+            copy build/compose/binaries/main/portable/*.zip release-artifacts/
+          }
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
