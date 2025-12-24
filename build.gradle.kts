@@ -37,6 +37,7 @@ compose.desktop {
             windows {
                 shortcut = true
                 menu = true
+                iconFile.set(project.file("src/main/resources/windows/WFBarn.ico"))
             }
 
             modules("java.sql", "java.desktop")
