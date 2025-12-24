@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: git update-index --chmod=+x gradlew
+
+      - name: Build and Package
+        run: ./gradlew packageExe packageMsi createDistributable
+
+      - name: Prepare Artifacts
+        shell: pwsh
+        run: |
+          mkdir release-artifacts
+          # Copy EXE and MSI
+          if (Test-Path build/compose/binaries/main/exe/*.exe) {
+            copy build/compose/binaries/main/exe/*.exe release-artifacts/
+          }
+          if (Test-Path build/compose/binaries/main/msi/*.msi) {
+            copy build/compose/binaries/main/msi/*.msi release-artifacts/
+          }
+          
+          # Create Portable (Green) version from Distributable
+          # The distributable is in build/compose/binaries/main/app
+          $distDir = "build/compose/binaries/main/app/WFBarn"
+          $zipPath = "release-artifacts/WFBarn-Portable-Windows.zip"
+          Compress-Archive -Path "$distDir\*" -DestinationPath $zipPath
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release-artifacts/*.exe
+            release-artifacts/*.msi
+            release-artifacts/*.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

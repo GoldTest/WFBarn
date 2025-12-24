@@ -25,6 +25,22 @@ class MainViewModel(private val storageService: StorageService) {
         updateState(newState)
     }
 
+    fun updateAsset(id: String, name: String, type: AssetType, currentAmount: Double) {
+        val newAssets = _state.value.assets.map {
+            if (it.id == id) {
+                it.copy(name = name, type = type, currentAmount = currentAmount)
+            } else it
+        }
+        updateState(_state.value.copy(assets = newAssets))
+    }
+
+    fun deleteAsset(id: String) {
+        val newAssets = _state.value.assets.filterNot { it.id == id }
+        // Optionally also delete records associated with this asset
+        val newRecords = _state.value.dailyRecords.filterNot { it.assetId == id }
+        updateState(_state.value.copy(assets = newAssets, dailyRecords = newRecords))
+    }
+
     fun updateDailyProfitLoss(assetId: String, profitLoss: Double) {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val asset = _state.value.assets.find { it.id == assetId } ?: return

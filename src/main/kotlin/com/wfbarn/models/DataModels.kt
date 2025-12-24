@@ -33,9 +33,10 @@ data class DailyProfitLoss(
 )
 
 @Serializable
-enum class TransactionType {
-    INCOME,  // 收入 (如工资)
-    EXPENSE  // 支出
+enum class TransactionType(val displayName: String) {
+    INCOME("收入"),      // 收入 (如工资)
+    EXPENSE("普通支出"),  // 普通支出 (如转账、调账)
+    CONSUMPTION("消费")  // 消费 (固定的亏损)
 }
 
 @Serializable

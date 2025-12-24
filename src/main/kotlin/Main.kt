@@ -5,8 +5,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.window.*
 import com.wfbarn.service.StorageService
 import com.wfbarn.ui.MainViewModel
 import com.wfbarn.ui.screens.*
@@ -19,8 +19,32 @@ fun main() = application {
     val storageService = remember { StorageService() }
     val viewModel = remember { MainViewModel(storageService) }
     var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
+    var isOpen by remember { mutableStateOf(true) }
+    val trayState = rememberTrayState()
+    val icon = painterResource("icon.png")
 
-    Window(onCloseRequest = ::exitApplication, title = "WFBarn - 财务管理系统") {
+    Tray(
+        state = trayState,
+        icon = icon,
+        menu = {
+            Item("Show Window", onClick = { isOpen = true })
+            Separator()
+            Item("Exit", onClick = { exitApplication() })
+        },
+        onAction = { isOpen = true } // 双击托盘图标
+    )
+
+    if (isOpen) {
+        Window(
+            onCloseRequest = { isOpen = false },
+            title = "WFBarn - 财务管理系统",
+            icon = icon,
+            state = rememberWindowState(
+                position = WindowPosition(androidx.compose.ui.Alignment.TopCenter),
+                width = 1000.dp,
+                height = 800.dp
+            )
+        ) {
         MaterialTheme {
             Row(modifier = Modifier.fillMaxSize()) {
                 // Sidebar
@@ -70,6 +94,7 @@ fun main() = application {
                     }
                 }
             }
+        }
         }
     }
 }

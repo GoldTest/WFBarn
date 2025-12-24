@@ -6,9 +6,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.wfbarn.models.Asset
 import com.wfbarn.models.AssetType
 import com.wfbarn.ui.MainViewModel
 
@@ -16,6 +20,8 @@ import com.wfbarn.ui.MainViewModel
 fun AssetsScreen(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingAsset by remember { mutableStateOf<Asset?>(null) }
+    var assetToDelete by remember { mutableStateOf<Asset?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -31,12 +37,31 @@ fun AssetsScreen(viewModel: MainViewModel) {
             LazyColumn {
                 items(state.assets) { asset ->
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), elevation = 2.dp) {
-                        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(asset.name, style = MaterialTheme.typography.subtitle1)
                                 Text(asset.type.displayName, style = MaterialTheme.typography.caption)
                             }
-                            Text("¥ ${String.format("%.2f", asset.currentAmount)}", style = MaterialTheme.typography.h6)
+                            
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    "¥ ${String.format("%.2f", asset.currentAmount)}",
+                                    style = MaterialTheme.typography.h6,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                                
+                                IconButton(onClick = { editingAsset = asset }) {
+                                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colors.primary)
+                                }
+                                
+                                IconButton(onClick = { assetToDelete = asset }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colors.error)
+                                }
+                            }
                         }
                     }
                 }
@@ -53,6 +78,103 @@ fun AssetsScreen(viewModel: MainViewModel) {
             }
         )
     }
+
+    editingAsset?.let { asset ->
+        EditAssetDialog(
+            asset = asset,
+            onDismiss = { editingAsset = null },
+            onConfirm = { name, type, amount ->
+                viewModel.updateAsset(asset.id, name, type, amount)
+                editingAsset = null
+            }
+        )
+    }
+
+    assetToDelete?.let { asset ->
+        AlertDialog(
+            onDismissRequest = { assetToDelete = null },
+            title = { Text("确认删除") },
+            text = { Text("确定要删除资产 \"${asset.name}\" 吗？这将同时删除相关的历史记录。") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteAsset(asset.id)
+                        assetToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error)
+                ) {
+                    Text("删除", color = MaterialTheme.colors.onError)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { assetToDelete = null }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun EditAssetDialog(
+    asset: Asset,
+    onDismiss: () -> Unit,
+    onConfirm: (String, AssetType, Double) -> Unit
+) {
+    var name by remember { mutableStateOf(asset.name) }
+    var type by remember { mutableStateOf(asset.type) }
+    var amount by remember { mutableStateOf(asset.currentAmount.toString()) }
+    var expanded by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("编辑资产") },
+        text = {
+            Column {
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("名称") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("类型: ${type.displayName}")
+                    }
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        AssetType.values().forEach { t ->
+                            DropdownMenuItem(onClick = {
+                                type = t
+                                expanded = false
+                            }) {
+                                Text(t.displayName)
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    label = { Text("当前金额") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(name, type, amount.toDoubleOrNull() ?: asset.currentAmount) }) {
+                Text("保存")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }
 
 @Composable

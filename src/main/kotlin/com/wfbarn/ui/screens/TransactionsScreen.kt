@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.wfbarn.models.TransactionType
 import com.wfbarn.ui.MainViewModel
@@ -38,8 +39,11 @@ fun TransactionsScreen(viewModel: MainViewModel) {
                                     Text(transaction.note, style = MaterialTheme.typography.caption)
                                 }
                             }
-                            val color = if (transaction.type == TransactionType.INCOME) 
-                                MaterialTheme.colors.primary else MaterialTheme.colors.error
+                            val color = when (transaction.type) {
+                                TransactionType.INCOME -> MaterialTheme.colors.primary
+                                TransactionType.EXPENSE -> Color.Gray
+                                TransactionType.CONSUMPTION -> MaterialTheme.colors.error
+                            }
                             Text(
                                 "${if (transaction.type == TransactionType.INCOME) "+" else "-"} ¥ ${String.format("%.2f", transaction.amount)}",
                                 style = MaterialTheme.typography.h6,
@@ -68,19 +72,19 @@ fun AddTransactionDialog(onDismiss: () -> Unit, onConfirm: (TransactionType, Dou
     var amount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf(TransactionType.EXPENSE) }
+    var type by remember { mutableStateOf(TransactionType.CONSUMPTION) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("记录流水") },
         text = {
             Column {
-                Row {
-                    RadioButton(selected = type == TransactionType.INCOME, onClick = { type = TransactionType.INCOME })
-                    Text("收入")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    RadioButton(selected = type == TransactionType.EXPENSE, onClick = { type = TransactionType.EXPENSE })
-                    Text("支出")
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    TransactionType.values().forEach { t ->
+                        RadioButton(selected = type == t, onClick = { type = t })
+                        Text(t.displayName)
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                 }
                 TextField(value = amount, onValueChange = { amount = it }, label = { Text("金额") })
                 Spacer(modifier = Modifier.height(8.dp))

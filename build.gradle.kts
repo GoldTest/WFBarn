@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.wfbarn"
-version = "1.0-SNAPSHOT"
+version = "0.0.1"
 
 repositories {
     mavenCentral()
@@ -27,9 +27,19 @@ compose.desktop {
         mainClass = "MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
-            packageVersion = "1.0.0"
+            packageVersion = "0.0.1"
+            description = "WFBarn Money Management System"
+            copyright = "© 2025 WFBarn"
+            vendor = "WFBarn"
+
+            windows {
+                shortcut = true
+                menu = true
+            }
+
+            modules("java.sql", "java.desktop")
         }
     }
 }
