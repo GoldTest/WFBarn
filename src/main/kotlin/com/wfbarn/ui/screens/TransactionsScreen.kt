@@ -1,5 +1,6 @@
 package com.wfbarn.ui.screens
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,25 +31,31 @@ fun TransactionsScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
             
             LazyColumn {
-                items(state.transactions.reversed()) { transaction ->
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), elevation = 2.dp) {
-                        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Column {
-                                Text("${transaction.date}: ${transaction.category}", style = MaterialTheme.typography.subtitle1)
-                                if (transaction.note.isNotEmpty()) {
-                                    Text(transaction.note, style = MaterialTheme.typography.caption)
+                items(state.transactions.reversed(), key = { it.id }) { transaction ->
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = slideInVertically() + fadeIn(),
+                        exit = slideOutVertically() + fadeOut()
+                    ) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), elevation = 2.dp) {
+                            Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Column {
+                                    Text("${transaction.date}: ${transaction.category}", style = MaterialTheme.typography.subtitle1)
+                                    if (transaction.note.isNotEmpty()) {
+                                        Text(transaction.note, style = MaterialTheme.typography.caption)
+                                    }
                                 }
+                                val color = when (transaction.type) {
+                                    TransactionType.INCOME -> MaterialTheme.colors.primary
+                                    TransactionType.EXPENSE -> Color.Gray
+                                    TransactionType.CONSUMPTION -> MaterialTheme.colors.error
+                                }
+                                Text(
+                                    "${if (transaction.type == TransactionType.INCOME) "+" else "-"} ¥ ${String.format("%.2f", transaction.amount)}",
+                                    style = MaterialTheme.typography.h6,
+                                    color = color
+                                )
                             }
-                            val color = when (transaction.type) {
-                                TransactionType.INCOME -> MaterialTheme.colors.primary
-                                TransactionType.EXPENSE -> Color.Gray
-                                TransactionType.CONSUMPTION -> MaterialTheme.colors.error
-                            }
-                            Text(
-                                "${if (transaction.type == TransactionType.INCOME) "+" else "-"} ¥ ${String.format("%.2f", transaction.amount)}",
-                                style = MaterialTheme.typography.h6,
-                                color = color
-                            )
                         }
                     }
                 }

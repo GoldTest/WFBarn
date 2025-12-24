@@ -1,9 +1,11 @@
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.*
@@ -15,9 +17,36 @@ enum class Screen {
     DASHBOARD, ASSETS, DAILY_REVIEW, TRANSACTIONS, MACRO_CURVE
 }
 
+@Composable
+fun AppTheme(isDark: Boolean, content: @Composable () -> Unit) {
+    val colors = if (isDark) {
+        darkColors(
+            primary = Color(0xFFBB86FC),
+            primaryVariant = Color(0xFF3700B3),
+            secondary = Color(0xFF03DAC6),
+            background = Color(0xFF121212),
+            surface = Color(0xFF121212),
+            onPrimary = Color.Black,
+            onSecondary = Color.Black,
+            onBackground = Color.White,
+            onSurface = Color.White
+        )
+    } else {
+        lightColors(
+            primary = Color(0xFF6200EE),
+            primaryVariant = Color(0xFF3700B3),
+            secondary = Color(0xFF03DAC6)
+        )
+    }
+
+    MaterialTheme(colors = colors, content = content)
+}
+
+@OptIn(ExperimentalAnimationApi::class)
 fun main() = application {
     val storageService = remember { StorageService() }
     val viewModel = remember { MainViewModel(storageService) }
+    val state by viewModel.state.collectAsState()
     var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
     var isOpen by remember { mutableStateOf(true) }
     val trayState = rememberTrayState()
@@ -45,56 +74,81 @@ fun main() = application {
                 height = 800.dp
             )
         ) {
-        MaterialTheme {
-            Row(modifier = Modifier.fillMaxSize()) {
-                // Sidebar
-                NavigationRail(
-                    modifier = Modifier.width(120.dp)
-                ) {
-                    NavigationRailItem(
-                        selected = currentScreen == Screen.DASHBOARD,
-                        onClick = { currentScreen = Screen.DASHBOARD },
-                        icon = { Icon(Icons.Default.Dashboard, "Dashboard") },
-                        label = { Text("总览") }
-                    )
-                    NavigationRailItem(
-                        selected = currentScreen == Screen.ASSETS,
-                        onClick = { currentScreen = Screen.ASSETS },
-                        icon = { Icon(Icons.Default.AccountBalance, "Assets") },
-                        label = { Text("资产") }
-                    )
-                    NavigationRailItem(
-                        selected = currentScreen == Screen.DAILY_REVIEW,
-                        onClick = { currentScreen = Screen.DAILY_REVIEW },
-                        icon = { Icon(Icons.Default.EditCalendar, "Daily") },
-                        label = { Text("复盘") }
-                    )
-                    NavigationRailItem(
-                        selected = currentScreen == Screen.TRANSACTIONS,
-                        onClick = { currentScreen = Screen.TRANSACTIONS },
-                        icon = { Icon(Icons.Default.History, "Transactions") },
-                        label = { Text("流水") }
-                    )
-                    NavigationRailItem(
-                        selected = currentScreen == Screen.MACRO_CURVE,
-                        onClick = { currentScreen = Screen.MACRO_CURVE },
-                        icon = { Icon(Icons.Default.ShowChart, "Macro") },
-                        label = { Text("宏观") }
-                    )
-                }
+            AppTheme(isDark = state.isDarkMode) {
+                Surface(color = MaterialTheme.colors.background) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        // Sidebar
+                        NavigationRail(
+                            modifier = Modifier.width(120.dp),
+                            backgroundColor = MaterialTheme.colors.surface,
+                            elevation = 8.dp
+                        ) {
+                            NavigationRailItem(
+                                selected = currentScreen == Screen.DASHBOARD,
+                                onClick = { currentScreen = Screen.DASHBOARD },
+                                icon = { Icon(Icons.Default.Dashboard, "Dashboard") },
+                                label = { Text("总览") }
+                            )
+                            NavigationRailItem(
+                                selected = currentScreen == Screen.ASSETS,
+                                onClick = { currentScreen = Screen.ASSETS },
+                                icon = { Icon(Icons.Default.AccountBalance, "Assets") },
+                                label = { Text("资产") }
+                            )
+                            NavigationRailItem(
+                                selected = currentScreen == Screen.DAILY_REVIEW,
+                                onClick = { currentScreen = Screen.DAILY_REVIEW },
+                                icon = { Icon(Icons.Default.EditCalendar, "Daily") },
+                                label = { Text("复盘") }
+                            )
+                            NavigationRailItem(
+                                selected = currentScreen == Screen.TRANSACTIONS,
+                                onClick = { currentScreen = Screen.TRANSACTIONS },
+                                icon = { Icon(Icons.Default.History, "Transactions") },
+                                label = { Text("流水") }
+                            )
+                            NavigationRailItem(
+                                selected = currentScreen == Screen.MACRO_CURVE,
+                                onClick = { currentScreen = Screen.MACRO_CURVE },
+                                icon = { Icon(Icons.Default.ShowChart, "Macro") },
+                                label = { Text("宏观") }
+                            )
+                            
+                            Spacer(modifier = Modifier.weight(1f))
+                            
+                            NavigationRailItem(
+                                selected = false,
+                                onClick = { viewModel.toggleDarkMode() },
+                                icon = { 
+                                    Icon(
+                                        if (state.isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                        "Toggle Dark Mode"
+                                    ) 
+                                },
+                                label = { Text(if (state.isDarkMode) "浅色" else "深色") }
+                            )
+                        }
 
-                // Main Content
-                Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                    when (currentScreen) {
-                        Screen.DASHBOARD -> DashboardScreen(viewModel)
-                        Screen.ASSETS -> AssetsScreen(viewModel)
-                        Screen.DAILY_REVIEW -> DailyReviewScreen(viewModel)
-                        Screen.TRANSACTIONS -> TransactionsScreen(viewModel)
-                        Screen.MACRO_CURVE -> MacroCurveScreen(viewModel)
+                        // Main Content
+                        Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                            AnimatedContent(
+                                targetState = currentScreen,
+                                transitionSpec = {
+                                    fadeIn() togetherWith fadeOut()
+                                }
+                            ) { screen ->
+                                when (screen) {
+                                    Screen.DASHBOARD -> DashboardScreen(viewModel)
+                                    Screen.ASSETS -> AssetsScreen(viewModel)
+                                    Screen.DAILY_REVIEW -> DailyReviewScreen(viewModel)
+                                    Screen.TRANSACTIONS -> TransactionsScreen(viewModel)
+                                    Screen.MACRO_CURVE -> MacroCurveScreen(viewModel)
+                                }
+                            }
+                        }
                     }
                 }
             }
-        }
         }
     }
 }

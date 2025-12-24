@@ -28,19 +28,29 @@ fun MacroCurveScreen(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
 
-    // 1. 根据每日复盘记录计算每日总资产
-    val dailyWealth = state.dailyRecords
-        .groupBy { it.date }
-        .mapValues { entry -> entry.value.sumOf { it.balance } }
+    // 1. 计算每日总资产 (Red Curve)
+    // 逻辑：对于每一个有记录的日期，计算所有资产在当日或当日之前的最新余额之和
+    val allReviewDates = state.dailyRecords.map { it.date }.toSet()
+    val allTransactionDates = state.transactions.map { it.date }.toSet()
+    val allDates = (allReviewDates + allTransactionDates).sortedBy { it.toString() }
 
-    // 2. 根据流水记录计算每日总消费 (TransactionType.CONSUMPTION)
+    val dailyWealth = allDates.associateWith { date ->
+        state.assets.sumOf { asset ->
+            // 找到该资产在 date 或 date 之前的最后一条记录
+            state.dailyRecords
+                .filter { it.assetId == asset.id && it.date <= date }
+                .maxByOrNull { it.date }
+                ?.balance ?: asset.initialAmount
+        }
+    }
+
+    // 2. 根据流水记录计算每日总消费 (Blue Curve - 仅限 CONSUMPTION 类型)
     val dailyConsumption = state.transactions
         .filter { it.type == com.wfbarn.models.TransactionType.CONSUMPTION }
         .groupBy { it.date }
         .mapValues { entry -> entry.value.sumOf { it.amount } }
 
-    // 3. 合并日期，确保即使某天只有复盘或只有消费也能显示
-    val allDates = (dailyWealth.keys + dailyConsumption.keys).sortedBy { it.toString() }
+    // 3. 准备绘图数据
     val dailyStats = allDates.map { date ->
         val wealth = dailyWealth[date] ?: 0.0
         val consumption = dailyConsumption[date] ?: 0.0
@@ -67,7 +77,7 @@ fun MacroCurveScreen(viewModel: MainViewModel) {
                 ListItem(
                     text = { Text(date.toString()) },
                     secondaryText = { 
-                        Text("当日消费: ¥ ${String.format("%.2f", consumption)}", color = Color.Gray) 
+                        Text("当日消费: ¥ -${String.format("%.2f", consumption)}", color = Color(0xFFF44336)) 
                     },
                     trailing = { Text("总资产: ¥ ${String.format("%.2f", total)}", style = MaterialTheme.typography.subtitle1) }
                 )
@@ -100,9 +110,9 @@ fun MacroChart(stats: List<Pair<kotlinx.datetime.LocalDate, Pair<Double, Double>
             val minWealth = totalWealthValues.minOrNull() ?: 0.0
             val wealthRange = (maxWealth - minWealth).let { if (it <= 0.0) maxWealth.let { m -> if (m <= 0.0) 1.0 else m } else it }
 
-            // 计算消费范围
+            // 计算消费范围 (为了防止消费曲线波动过大，设置一个合理的最小比例)
             val maxConsumption = consumptionValues.maxOrNull() ?: 1.0
-            val consumptionRange = maxConsumption.let { if (it <= 0.0) 1.0 else it }
+            val consumptionRange = maxConsumption.let { if (it <= 100.0) 1000.0 else it } // 如果消费很小，按1000的比例显示，防止顶格
 
             // 绘制坐标轴
             drawLine(Color.Gray, start = Offset(0f, 0f), end = Offset(0f, height))

@@ -1,5 +1,6 @@
 package com.wfbarn.ui.screens
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,31 +36,37 @@ fun AssetsScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
             
             LazyColumn {
-                items(state.assets) { asset ->
-                    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), elevation = 2.dp) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(asset.name, style = MaterialTheme.typography.subtitle1)
-                                Text(asset.type.displayName, style = MaterialTheme.typography.caption)
-                            }
-                            
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    "¥ ${String.format("%.2f", asset.currentAmount)}",
-                                    style = MaterialTheme.typography.h6,
-                                    modifier = Modifier.padding(horizontal = 8.dp)
-                                )
-                                
-                                IconButton(onClick = { editingAsset = asset }) {
-                                    Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colors.primary)
+                items(state.assets, key = { it.id }) { asset ->
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), elevation = 2.dp) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(asset.name, style = MaterialTheme.typography.subtitle1)
+                                    Text(asset.type.displayName, style = MaterialTheme.typography.caption)
                                 }
                                 
-                                IconButton(onClick = { assetToDelete = asset }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colors.error)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        "¥ ${String.format("%.2f", asset.currentAmount)}",
+                                        style = MaterialTheme.typography.h6,
+                                        modifier = Modifier.padding(horizontal = 8.dp)
+                                    )
+                                    
+                                    IconButton(onClick = { editingAsset = asset }) {
+                                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colors.primary)
+                                    }
+                                    
+                                    IconButton(onClick = { assetToDelete = asset }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colors.error)
+                                    }
                                 }
                             }
                         }

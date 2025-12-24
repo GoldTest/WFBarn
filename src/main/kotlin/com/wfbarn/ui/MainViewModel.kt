@@ -80,6 +80,29 @@ class MainViewModel(private val storageService: StorageService) {
         updateState(_state.value.copy(macroRecords = newRecords))
     }
 
+    fun setMonthlyBudget(yearMonth: String, amount: Double) {
+        val newBudgets = _state.value.monthlyBudgets.toMutableMap()
+        newBudgets[yearMonth] = amount
+        updateState(_state.value.copy(monthlyBudgets = newBudgets))
+    }
+
+    fun toggleDarkMode() {
+        updateState(_state.value.copy(isDarkMode = !_state.value.isDarkMode))
+    }
+
+    fun getCurrentMonthBudget(): Double {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val key = String.format("%04d-%02d", now.year, now.monthNumber)
+        return _state.value.monthlyBudgets[key] ?: 0.0
+    }
+
+    fun getCurrentMonthConsumption(): Double {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        return _state.value.transactions
+            .filter { it.date.year == now.year && it.date.monthNumber == now.monthNumber && it.type == TransactionType.CONSUMPTION }
+            .sumOf { it.amount }
+    }
+
     private fun updateState(newState: AppState) {
         _state.value = newState
         storageService.saveState(newState)
