@@ -73,6 +73,16 @@ class MainViewModel(private val storageService: StorageService) {
         updateState(_state.value.copy(transactions = _state.value.transactions + transaction))
     }
 
+    fun deleteTransaction(id: String) {
+        val newTransactions = _state.value.transactions.filterNot { it.id == id }
+        updateState(_state.value.copy(transactions = newTransactions))
+    }
+
+    fun deleteDailyRecord(date: kotlinx.datetime.LocalDate, assetId: String) {
+        val newRecords = _state.value.dailyRecords.filterNot { it.date == date && it.assetId == assetId }
+        updateState(_state.value.copy(dailyRecords = newRecords))
+    }
+
     fun addMacroRecord(value: Double, note: String) {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val record = MacroRecord(today, value, note)

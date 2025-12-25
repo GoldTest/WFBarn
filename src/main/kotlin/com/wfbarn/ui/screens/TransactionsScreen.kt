@@ -7,7 +7,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -50,11 +52,16 @@ fun TransactionsScreen(viewModel: MainViewModel) {
                                     TransactionType.EXPENSE -> Color.Gray
                                     TransactionType.CONSUMPTION -> MaterialTheme.colors.error
                                 }
-                                Text(
-                                    "${if (transaction.type == TransactionType.INCOME) "+" else "-"} ¥ ${String.format("%.2f", transaction.amount)}",
-                                    style = MaterialTheme.typography.h6,
-                                    color = color
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        "${if (transaction.type == TransactionType.INCOME) "+" else "-"} ¥ ${String.format("%.2f", transaction.amount)}",
+                                        style = MaterialTheme.typography.h6,
+                                        color = color
+                                    )
+                                    IconButton(onClick = { viewModel.deleteTransaction(transaction.id) }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Gray)
+                                    }
+                                }
                             }
                         }
                     }

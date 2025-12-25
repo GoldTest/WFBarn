@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,10 +94,15 @@ fun DailyReviewScreen(viewModel: MainViewModel) {
                                 text = { Text(assetName) },
                                 secondaryText = { Text("余额: ¥ ${String.format("%.2f", record.balance)}") },
                                 trailing = { 
-                                    Text(
-                                        "${if (record.profitLoss >= 0) "+" else ""}¥ ${String.format("%.2f", record.profitLoss)}",
-                                        color = if (record.profitLoss >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            "${if (record.profitLoss >= 0) "+" else ""}¥ ${String.format("%.2f", record.profitLoss)}",
+                                            color = if (record.profitLoss >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                        )
+                                        IconButton(onClick = { viewModel.deleteDailyRecord(record.date, record.assetId) }) {
+                                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Gray, modifier = Modifier.size(20.dp))
+                                        }
+                                    }
                                 }
                             )
                         }
