@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.wfbarn"
-version = "0.0.2"
+version = "0.0.3"
 
 repositories {
     mavenCentral()
@@ -29,7 +29,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
-            packageVersion = "0.0.2"
+            packageVersion = "0.0.3"
             description = "WFBarn Money Management System"
             copyright = "© 2025 WFBarn"
             vendor = "WFBarn"
@@ -39,8 +39,11 @@ compose.desktop {
                 menu = true
                 iconFile.set(project.file("src/main/resources/windows/WFBarn.ico"))
             }
+        }
 
-            modules("java.sql", "java.desktop")
+        buildTypes.release.proguard {
+            isEnabled.set(true)
+            configurationFiles.from(project.file("proguard-rules.pro"))
         }
     }
 }
