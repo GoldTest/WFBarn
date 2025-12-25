@@ -25,7 +25,8 @@ jobs:
         run: git update-index --chmod=+x gradlew
 
       - name: Build and Package
-        run: ./gradlew packageMsi packagePortable --no-daemon
+        # 显式指定 -Pcompose.desktop.buildType=release 来触发 ProGuard
+        run: ./gradlew packageMsi packagePortable -Pcompose.desktop.buildType=release --no-daemon
 
       - name: Prepare Artifacts
         shell: pwsh
