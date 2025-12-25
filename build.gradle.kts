@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.wfbarn"
-version = "0.0.6"
+version = "0.0.7"
 
 repositories {
     mavenCentral()
@@ -29,7 +29,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
-            packageVersion = "0.0.6"
+            packageVersion = "0.0.7"
             description = "WFBarn Money Management System"
             copyright = "© 2025 WFBarn"
             vendor = "WFBarn"
@@ -37,7 +37,7 @@ compose.desktop {
             windows {
                 shortcut = true
                 menu = true
-                iconFile.set(project.file("src/main/resources/windows/WFBarn.ico"))
+                // iconFile.set(project.file("src/main/resources/windows/WFBarn.ico"))
             }
 
             modules("java.sql", "java.desktop", "jdk.unsupported", "java.instrument")
@@ -46,6 +46,7 @@ compose.desktop {
 
         buildTypes.release.proguard {
             isEnabled.set(true)
+            version.set("7.4.0")
             configurationFiles.from(project.file("proguard-rules.pro"))
         }
     }
@@ -57,5 +58,14 @@ tasks.register<Zip>("packagePortable") {
     dependsOn("createDistributable")
     from("build/compose/binaries/main/app")
     archiveFileName.set("WFBarn-portable.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("compose/binaries/main/zip"))
+}
+
+tasks.register<Zip>("packageReleasePortable") {
+    group = "compose desktop"
+    description = "Packages the application as a release portable zip file."
+    dependsOn("createReleaseDistributable")
+    from("build/compose/binaries/main-release/app")
+    archiveFileName.set("WFBarn-portable-release.zip")
     destinationDirectory.set(layout.buildDirectory.dir("compose/binaries/main/zip"))
 }
