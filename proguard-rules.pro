@@ -1,4 +1,8 @@
-# Compose Desktop 基础混淆规则
+# 禁用耗时的优化和混淆，只保留压缩（Shrinking），这能极大地加快构建速度
+-dontoptimize
+-dontobfuscate
+
+# 基础规则
 -keepattributes *Annotation*
 -keepattributes Signature
 -keepattributes InnerClasses
@@ -21,8 +25,5 @@
 # 保留数据模型
 -keep class com.wfbarn.models.** { *; }
 
-# 针对 materialIconsExtended 的优化：只保留被使用的图标
-# ProGuard 会自动移除未引用的图标类，极大减小体积
--keep class androidx.compose.material.icons.** {
-    public static androidx.compose.ui.graphics.vector.ImageVector get*;
-}
+# 注意：移除了对 material.icons.** 的全量保留
+# 让 ProGuard 自动移除未使用的图标类，这是减小体积的关键

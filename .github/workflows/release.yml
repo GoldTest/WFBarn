@@ -25,20 +25,17 @@ jobs:
         run: git update-index --chmod=+x gradlew
 
       - name: Build and Package
-        run: ./gradlew packageExe packageMsi packagePortable
+        run: ./gradlew packageMsi packagePortable --no-daemon
 
       - name: Prepare Artifacts
         shell: pwsh
         run: |
           mkdir release-artifacts
-          # Copy EXE and MSI
-          if (Test-Path build/compose/binaries/main/exe/*.exe) {
-            copy build/compose/binaries/main/exe/*.exe release-artifacts/
-          }
+          # Copy MSI
           if (Test-Path build/compose/binaries/main/msi/*.msi) {
             copy build/compose/binaries/main/msi/*.msi release-artifacts/
           }
-          # Copy Portable Zip from the new task output
+          # Copy Portable Zip
           if (Test-Path build/compose/binaries/main/zip/*.zip) {
             copy build/compose/binaries/main/zip/*.zip release-artifacts/
           }

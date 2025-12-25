@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.wfbarn"
-version = "0.0.3"
+version = "0.0.4"
 
 repositories {
     mavenCentral()
@@ -29,7 +29,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
-            packageVersion = "0.0.3"
+            packageVersion = "0.0.4"
             description = "WFBarn Money Management System"
             copyright = "© 2025 WFBarn"
             vendor = "WFBarn"
@@ -39,6 +39,9 @@ compose.desktop {
                 menu = true
                 iconFile.set(project.file("src/main/resources/windows/WFBarn.ico"))
             }
+
+            modules("java.sql", "java.desktop", "jdk.unsupported", "java.instrument")
+            includeAllModules = false
         }
 
         buildTypes.release.proguard {
