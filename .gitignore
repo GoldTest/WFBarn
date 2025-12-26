@@ -20,3 +20,7 @@ Thumbs.db
 # Note: The data is stored in Documents/WFBarn by default, 
 # but if you ever store anything in the project root, it should be ignored.
 state.json
+
+# Keystore
+*.keystore
+*.jks

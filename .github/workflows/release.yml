@@ -24,9 +24,25 @@ jobs:
       - name: Grant execute permission for gradlew
         run: git update-index --chmod=+x gradlew
 
+      - name: Decode Keystore
+        id: decode_keystore
+        shell: pwsh
+        run: |
+          $keystore_base64 = "${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}"
+          if (-not [string]::IsNullOrEmpty($keystore_base64)) {
+            [System.Convert]::FromBase64String($keystore_base64) | Set-Content -Path "release.keystore" -Encoding Byte
+            echo "keystore_path=release.keystore" >> $env:GITHUB_OUTPUT
+          }
+
       - name: Build and Package
         # 使用 packageReleaseExe, packageReleaseMsi 和 packageReleasePortable 显式触发 ProGuard 压缩，同时添加 assembleRelease 进行 Android 打包
         run: ./gradlew packageReleaseExe packageReleaseMsi packageReleasePortable assembleRelease --no-daemon
+        env:
+          ANDROID_SIGNING_STORE_FILE: "release.keystore"
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx2048m -XX:MaxMetaspaceSize=512m"
 
       - name: Prepare Artifacts
         shell: pwsh

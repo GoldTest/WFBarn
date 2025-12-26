@@ -16,7 +16,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 group = "com.wfbarn"
-version = "0.2.2"
+version = "0.2.3"
 
 kotlin {
     androidTarget()
@@ -77,9 +77,29 @@ android {
         applicationId = "com.wfbarn"
         minSdk = 24
         targetSdk = 34
-        versionCode = 12
-        versionName = "0.2.2"
+        versionCode = 13
+        versionName = "0.2.3"
     }
+
+    signingConfigs {
+        create("release") {
+            val storeFilePath = System.getenv("ANDROID_SIGNING_STORE_FILE")
+            if (storeFilePath != null) {
+                storeFile = file(storeFilePath)
+                storePassword = System.getenv("ANDROID_SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")
+            } else {
+                // Fallback to debug if secrets are not available
+                val debugConfig = signingConfigs.getByName("debug")
+                storeFile = debugConfig.storeFile
+                storePassword = debugConfig.storePassword
+                keyAlias = debugConfig.keyAlias
+                keyPassword = debugConfig.keyPassword
+            }
+        }
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -88,7 +108,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -104,7 +124,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
-            packageVersion = "0.2.2"
+            packageVersion = "0.2.3"
             description = "WFBarn Money Management System"
             copyright = "© 2025 WFBarn"
             vendor = "WFBarn"
