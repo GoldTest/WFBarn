@@ -5,20 +5,25 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
-class StorageService {
+class StorageService(private val baseDir: File? = null) {
     private val json = Json { 
         prettyPrint = true
         ignoreUnknownKeys = true
     }
     
     private val storageDir: File by lazy {
-        val userHome = System.getProperty("user.home")
-        val documents = File(userHome, "Documents")
-        val wfBarnDir = File(documents, "WFBarn")
-        if (!wfBarnDir.exists()) {
-            wfBarnDir.mkdirs()
+        val dir = if (baseDir != null) {
+            File(baseDir, "WFBarn")
+        } else {
+            val userHome = System.getProperty("user.home", ".")
+            val documents = File(userHome, "Documents")
+            File(documents, "WFBarn")
         }
-        wfBarnDir
+        
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        dir
     }
     
     private val stateFile: File

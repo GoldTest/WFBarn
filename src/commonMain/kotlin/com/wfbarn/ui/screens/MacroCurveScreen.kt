@@ -13,20 +13,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.text.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wfbarn.ui.MainViewModel
-import org.jetbrains.skia.Font
-import org.jetbrains.skia.Paint
-import org.jetbrains.skia.TextLine
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalTextApi::class)
 @Composable
 fun MacroCurveScreen(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
+    val textMeasurer = rememberTextMeasurer()
 
     // 1. 计算每日总资产 (Red Curve)
     // 逻辑：对于每一个有记录的日期，计算所有资产在当日或当日之前的最新余额之和
@@ -64,7 +62,7 @@ fun MacroCurveScreen(viewModel: MainViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
         
         if (dailyStats.isNotEmpty()) {
-            MacroChart(dailyStats)
+            MacroChart(dailyStats, textMeasurer)
             
             Spacer(modifier = Modifier.height(24.dp))
             Text("历史记录", style = MaterialTheme.typography.h6)
@@ -91,14 +89,14 @@ fun MacroCurveScreen(viewModel: MainViewModel) {
     }
 }
 
+@OptIn(ExperimentalTextApi::class)
 @Composable
-fun MacroChart(stats: List<Pair<kotlinx.datetime.LocalDate, Pair<Double, Double>>>) {
+fun MacroChart(stats: List<Pair<kotlinx.datetime.LocalDate, Pair<Double, Double>>>, textMeasurer: TextMeasurer) {
     val totalWealthValues = stats.map { it.second.first }
     val consumptionValues = stats.map { it.second.second }
     
-    val density = LocalDensity.current
     val labelFontSize = 10.sp
-    val labelFontSizePx = with(density) { labelFontSize.toPx() }
+    val labelStyle = TextStyle(color = Color.Gray, fontSize = labelFontSize)
 
     Column {
         Canvas(modifier = Modifier.fillMaxWidth().height(350.dp).padding(start = 60.dp, end = 20.dp, top = 20.dp, bottom = 40.dp)) {
@@ -118,12 +116,6 @@ fun MacroChart(stats: List<Pair<kotlinx.datetime.LocalDate, Pair<Double, Double>
             drawLine(Color.Gray, start = Offset(0f, 0f), end = Offset(0f, height))
             drawLine(Color.Gray, start = Offset(0f, height), end = Offset(width, height))
             
-            // 绘制纵轴标签 (金额)
-            val paint = Paint().apply {
-                color = org.jetbrains.skia.Color.makeRGB(128, 128, 128)
-            }
-            val font = Font(null, labelFontSizePx)
-            
             // 资产刻度 (左侧)
             val wealthLabels = 5
             for (i in 0..wealthLabels) {
@@ -131,8 +123,13 @@ fun MacroChart(stats: List<Pair<kotlinx.datetime.LocalDate, Pair<Double, Double>
                 val value = minWealth + ratio * wealthRange
                 val y = height - ratio * height
                 val label = String.format("%.0f", value)
-                val textLine = TextLine.make(label, font)
-                drawContext.canvas.nativeCanvas.drawTextLine(textLine, -textLine.width - 10f, y + textLine.height / 3f, paint)
+                
+                val textLayoutResult = textMeasurer.measure(label, labelStyle)
+                drawText(
+                    textLayoutResult,
+                    topLeft = Offset(-textLayoutResult.size.width.toFloat() - 10f, y - textLayoutResult.size.height / 2f)
+                )
+                
                 drawLine(Color.LightGray, start = Offset(-5f, y), end = Offset(0f, y))
             }
 
@@ -143,8 +140,11 @@ fun MacroChart(stats: List<Pair<kotlinx.datetime.LocalDate, Pair<Double, Double>
                     val x = if (stats.size > 1) index * stepX else width / 2f
                     if (stats.size <= 7 || index % (stats.size / 5 + 1) == 0 || index == stats.size - 1) {
                         val dateStr = pair.first.toString().substring(5) // MM-DD
-                        val textLine = TextLine.make(dateStr, font)
-                        drawContext.canvas.nativeCanvas.drawTextLine(textLine, x - textLine.width / 2f, height + textLine.height + 10f, paint)
+                        val textLayoutResult = textMeasurer.measure(dateStr, labelStyle)
+                        drawText(
+                            textLayoutResult,
+                            topLeft = Offset(x - textLayoutResult.size.width / 2f, height + 10f)
+                        )
                         drawLine(Color.LightGray, start = Offset(x, height), end = Offset(x, height + 5f))
                     }
                 }

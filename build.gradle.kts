@@ -1,25 +1,87 @@
+@file:OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
-    kotlin("jvm") version "1.9.20"
+    kotlin("multiplatform") version "1.9.20"
     kotlin("plugin.serialization") version "1.9.20"
     id("org.jetbrains.compose") version "1.5.10"
+    id("com.android.application") version "8.2.0"
+}
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions.jvmTarget = "17"
 }
 
 group = "com.wfbarn"
 version = "0.0.8"
 
-repositories {
-    mavenCentral()
-    maven("https://maven.pkg.jetbrains.space/public/p/compose/interactive-graphics")
-    google()
+kotlin {
+    androidTarget()
+    
+    jvm("desktop")
+    
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material)
+                implementation(compose.ui)
+                implementation(compose.components.resources)
+                implementation(compose.materialIconsExtended)
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+            }
+        }
+        
+        val androidMain by getting {
+            dependencies {
+                implementation("androidx.activity:activity-compose:1.8.0")
+                implementation("androidx.appcompat:appcompat:1.6.1")
+                implementation("androidx.core:core-ktx:1.12.0")
+            }
+        }
+        
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
+        }
+    }
 }
 
-dependencies {
-    implementation(compose.desktop.currentOs)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
-    implementation(compose.materialIconsExtended)
+android {
+    namespace = "com.wfbarn"
+    compileSdk = 34
+
+    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+    sourceSets["main"].res.srcDirs("src/androidMain/res")
+    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+
+    defaultConfig {
+        applicationId = "com.wfbarn"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 8
+        versionName = "0.0.8"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }
 
 compose.desktop {
