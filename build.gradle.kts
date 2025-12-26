@@ -16,7 +16,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 group = "com.wfbarn"
-version = "0.0.9"
+version = "0.1.0"
 
 kotlin {
     androidTarget()
@@ -77,8 +77,8 @@ android {
         applicationId = "com.wfbarn"
         minSdk = 24
         targetSdk = 34
-        versionCode = 9
-        versionName = "0.0.9"
+        versionCode = 10
+        versionName = "0.1.0"
     }
     packaging {
         resources {
@@ -88,6 +88,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -103,7 +104,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
-            packageVersion = "0.0.9"
+            packageVersion = "0.1.0"
             description = "WFBarn Money Management System"
             copyright = "© 2025 WFBarn"
             vendor = "WFBarn"
@@ -119,7 +120,7 @@ compose.desktop {
         }
 
         buildTypes.release.proguard {
-            isEnabled.set(true)
+            isEnabled.set(false)
             version.set("7.4.0")
             configurationFiles.from(project.file("proguard-rules.pro"))
         }
