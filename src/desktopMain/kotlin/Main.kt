@@ -15,25 +15,8 @@ fun main() = application {
     var isOpen by remember { mutableStateOf(true) }
     val trayState = rememberTrayState()
     
-    // 加载图标并添加白色底色背景，处理半透明不好看的问题
-    val baseIcon = painterResource("icon.png")
-    val icon = remember(baseIcon) {
-        object : Painter() {
-            override val intrinsicSize = baseIcon.intrinsicSize
-            override fun DrawScope.onDraw() {
-                // 绘制白色圆角矩形背景
-                drawRoundRect(
-                    color = Color.Red,
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(intrinsicSize.width * 0.2f)
-                )
-                // 绘制原图标
-                with(baseIcon) {
-                    draw(intrinsicSize)
-                }
-            }
-        }
-    }
-
+    // 加载图标
+    val icon = painterResource("icon.png")
 
     Tray(
         state = trayState,
