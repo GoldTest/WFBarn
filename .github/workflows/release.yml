@@ -25,21 +25,29 @@ jobs:
         run: git update-index --chmod=+x gradlew
 
       - name: Build and Package
-        # 使用 packageReleaseMsi 和 packageReleasePortable 显式触发 ProGuard 压缩
-        run: ./gradlew packageReleaseMsi packageReleasePortable --no-daemon
+        # 使用 packageReleaseExe, packageReleaseMsi 和 packageReleasePortable 显式触发 ProGuard 压缩，同时添加 assembleRelease 进行 Android 打包
+        run: ./gradlew packageReleaseExe packageReleaseMsi packageReleasePortable assembleRelease --no-daemon
 
       - name: Prepare Artifacts
         shell: pwsh
         run: |
-          mkdir release-artifacts
-          # Copy MSI from release folder
-          if (Test-Path build/compose/binaries/main-release/msi/*.msi) {
-            copy build/compose/binaries/main-release/msi/*.msi release-artifacts/
-          }
-          # Copy Portable Zip from custom task output folder
-          if (Test-Path build/compose/binaries/main/zip/*.zip) {
-            copy build/compose/binaries/main/zip/*.zip release-artifacts/
-          }
+            mkdir release-artifacts
+            # Copy EXE from release folder
+            if (Test-Path build/compose/binaries/main-release/exe/*.exe) {
+              copy build/compose/binaries/main-release/exe/*.exe release-artifacts/
+            }
+            # Copy MSI from release folder
+            if (Test-Path build/compose/binaries/main-release/msi/*.msi) {
+              copy build/compose/binaries/main-release/msi/*.msi release-artifacts/
+            }
+            # Copy Portable Zip from custom task output folder
+            if (Test-Path build/compose/binaries/main/zip/*.zip) {
+              copy build/compose/binaries/main/zip/*.zip release-artifacts/
+            }
+            # Copy Android APK
+            if (Test-Path build/outputs/apk/release/*.apk) {
+              copy build/outputs/apk/release/*.apk release-artifacts/
+            }
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -48,6 +56,7 @@ jobs:
             release-artifacts/*.exe
             release-artifacts/*.msi
             release-artifacts/*.zip
+            release-artifacts/*.apk
           draft: false
           prerelease: false
         env:
