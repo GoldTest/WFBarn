@@ -20,7 +20,14 @@ class SyncService {
         ignoreUnknownKeys = true
     }
 
+    private fun getFullUrl(config: SyncConfig): String {
+        val baseUrl = config.url.trimEnd('/')
+        val path = config.path.let { if (it.startsWith("/")) it else "/$it" }
+        return "$baseUrl$path"
+    }
+
     private fun createClient(config: SyncConfig): HttpClient {
+        val fullUrl = getFullUrl(config)
         return HttpClient {
             install(ContentNegotiation) {
                 json(json)
@@ -31,7 +38,11 @@ class SyncService {
                         BasicAuthCredentials(config.username, config.password)
                     }
                     sendWithoutRequest { request ->
-                        request.url.host == Url(config.url).host
+                        try {
+                            request.url.host == Url(fullUrl).host
+                        } catch (e: Exception) {
+                            false
+                        }
                     }
                 }
             }
@@ -44,10 +55,11 @@ class SyncService {
 
     suspend fun upload(config: SyncConfig, state: AppState): Boolean {
         if (config.url.isBlank()) return false
+        val fullUrl = getFullUrl(config)
         val client = createClient(config)
         return try {
             val jsonString = json.encodeToString(AppState.serializer(), state)
-            val response: HttpResponse = client.put(config.url) {
+            val response: HttpResponse = client.put(fullUrl) {
                 setBody(jsonString)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }
@@ -62,9 +74,10 @@ class SyncService {
 
     suspend fun download(config: SyncConfig): AppState? {
         if (config.url.isBlank()) return null
+        val fullUrl = getFullUrl(config)
         val client = createClient(config)
         return try {
-            val response: HttpResponse = client.get(config.url)
+            val response: HttpResponse = client.get(fullUrl)
             if (response.status.isSuccess()) {
                 val jsonString = response.bodyAsText()
                 json.decodeFromString<AppState>(jsonString)
@@ -81,10 +94,11 @@ class SyncService {
 
     suspend fun getRemoteLastModified(config: SyncConfig): Long {
         if (config.url.isBlank()) return 0
+        val fullUrl = getFullUrl(config)
         val client = createClient(config)
         return try {
             // WebDAV PROPFIND would be better, but HEAD might work if server supports it
-            val response: HttpResponse = client.head(config.url)
+            val response: HttpResponse = client.head(fullUrl)
             val lastModified = response.headers[HttpHeaders.LastModified]
             // Simple parsing of HTTP date if needed, or just return 0 for now to force sync
             // For now, let's just return 0 and rely on manual sync/lastSyncTime

@@ -59,6 +59,7 @@ data class MacroRecord(
 @Serializable
 data class SyncConfig(
     val url: String = "",
+    val path: String = "/WFBarn/state.json",
     val username: String = "",
     val password: String = "",
     val autoSync: Boolean = false,

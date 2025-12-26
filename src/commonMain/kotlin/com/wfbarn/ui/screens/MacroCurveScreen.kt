@@ -250,6 +250,7 @@ fun SyncConfigDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     val state by viewModel.state.collectAsState()
     
     var url by remember { mutableStateOf(state.syncConfig.url) }
+    var path by remember { mutableStateOf(state.syncConfig.path) }
     var username by remember { mutableStateOf(state.syncConfig.username) }
     var password by remember { mutableStateOf(state.syncConfig.password) }
     var autoSync by remember { mutableStateOf(state.syncConfig.autoSync) }
@@ -262,7 +263,14 @@ fun SyncConfigDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("WebDAV 地址") },
+                    label = { Text("WebDAV 基地址 (如: https://dav.jianguoyun.com/dav/)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = path,
+                    onValueChange = { path = it },
+                    label = { Text("同步路径 (如: /WFBarn/state.json)") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -304,7 +312,7 @@ fun SyncConfigDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                 }
                 Button(onClick = {
                     viewModel.updateSyncConfig(
-                        SyncConfig(url, username, password, autoSync, state.syncConfig.lastSyncTime)
+                        SyncConfig(url, path, username, password, autoSync, state.syncConfig.lastSyncTime)
                     )
                     onDismiss()
                 }) {
