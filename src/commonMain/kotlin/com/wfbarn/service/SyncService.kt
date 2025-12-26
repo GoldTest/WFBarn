@@ -22,7 +22,9 @@ class SyncService {
 
     private fun getFullUrl(config: SyncConfig): String {
         val baseUrl = config.url.trimEnd('/')
-        val path = config.path.let { if (it.startsWith("/")) it else "/$it" }
+        val path = config.path.trim().let { 
+            if (it.startsWith("/")) it else "/$it" 
+        }
         return "$baseUrl$path"
     }
 
@@ -39,7 +41,9 @@ class SyncService {
                     }
                     sendWithoutRequest { request ->
                         try {
-                            request.url.host == Url(fullUrl).host
+                            // 确保 host 匹配，处理可能的 Url 解析异常
+                            val configHost = Url(config.url).host
+                            request.url.host == configHost
                         } catch (e: Exception) {
                             false
                         }
@@ -47,8 +51,8 @@ class SyncService {
                 }
             }
             install(HttpTimeout) {
-                requestTimeoutMillis = 15000
-                connectTimeoutMillis = 15000
+                requestTimeoutMillis = 20000
+                connectTimeoutMillis = 20000
             }
         }
     }
@@ -58,17 +62,57 @@ class SyncService {
         val fullUrl = getFullUrl(config)
         val client = createClient(config)
         return try {
+            // 尝试先创建父目录
+            ensureParentDirectoryExists(client, config)
+            
             val jsonString = json.encodeToString(AppState.serializer(), state)
             val response: HttpResponse = client.put(fullUrl) {
                 setBody(jsonString)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }
-            response.status.isSuccess()
+            
+            if (!response.status.isSuccess()) {
+                val errorMsg = when (response.status.value) {
+                    409 -> "HTTP 409 Conflict: 路径冲突，请确保同步路径指向的是文件而非文件夹"
+                    401 -> "HTTP 401 Unauthorized: 账号或应用密码错误"
+                    else -> "HTTP ${response.status.value}: ${response.status.description}"
+                }
+                throw Exception(errorMsg)
+            }
+            true
         } catch (e: Exception) {
-            e.printStackTrace()
-            false
+            throw e
         } finally {
             client.close()
+        }
+    }
+
+    private suspend fun ensureParentDirectoryExists(client: HttpClient, config: SyncConfig) {
+        val baseUrl = config.url.trimEnd('/')
+        val pathParts = config.path.split('/').filter { it.isNotEmpty() }
+        
+        if (pathParts.size <= 1) return
+        
+        var currentPath = baseUrl
+        for (i in 0 until pathParts.size - 1) {
+            currentPath += "/${pathParts[i]}"
+            try {
+                // WebDAV 规范：某些服务器要求目录以 / 结尾进行 PROPFIND/MKCOL
+                val dirPath = "$currentPath/"
+                val checkResponse = client.request(dirPath) {
+                    method = HttpMethod("PROPFIND")
+                    header("Depth", "0")
+                }
+                
+                // 如果目录不存在 (404) 或 路径冲突 (409，通常指父目录未创建)，则尝试创建
+                if (checkResponse.status.value == 404 || checkResponse.status.value == 409) {
+                    client.request(dirPath) {
+                        method = HttpMethod("MKCOL")
+                    }
+                }
+            } catch (e: Exception) {
+                // 忽略中间层级的探测错误
+            }
         }
     }
 
@@ -78,15 +122,16 @@ class SyncService {
         val client = createClient(config)
         return try {
             val response: HttpResponse = client.get(fullUrl)
-            if (response.status.isSuccess()) {
-                val jsonString = response.bodyAsText()
-                json.decodeFromString<AppState>(jsonString)
-            } else {
-                null
+            when (response.status.value) {
+                200 -> {
+                    val jsonString = response.bodyAsText()
+                    json.decodeFromString<AppState>(jsonString)
+                }
+                404, 409 -> null // 坚果云在父目录不存在时可能返回 409，统一视为远程无文件
+                else -> throw Exception("HTTP ${response.status.value}: ${response.status.description}")
             }
         } catch (e: Exception) {
-            e.printStackTrace()
-            null
+            throw e
         } finally {
             client.close()
         }

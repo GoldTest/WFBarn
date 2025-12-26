@@ -16,12 +16,31 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.util.*
 
+enum class SyncStage(val displayName: String) {
+    IDLE("空闲"),
+    PULLING("正在拉取远程数据..."),
+    MERGING("正在合并本地与远程数据..."),
+    PUSHING("正在推送更新到远程..."),
+    COMPLETED("同步完成"),
+    FAILED("同步失败")
+}
+
+data class SyncStatus(
+    val stage: SyncStage = SyncStage.IDLE,
+    val message: String = "",
+    val lastSyncTime: Long = 0,
+    val isError: Boolean = false
+)
+
 class MainViewModel(
     private val storageService: StorageService,
     private val syncService: SyncService = SyncService()
 ) {
     private val _state = MutableStateFlow(storageService.loadState())
     val state: StateFlow<AppState> = _state
+
+    private val _syncStatus = MutableStateFlow(SyncStatus(lastSyncTime = _state.value.syncConfig.lastSyncTime))
+    val syncStatus: StateFlow<SyncStatus> = _syncStatus
 
     private val viewModelScope = CoroutineScope(Dispatchers.Main)
     private var syncJob: Job? = null
@@ -60,31 +79,65 @@ class MainViewModel(
             try {
                 isSyncing = true
                 val config = _state.value.syncConfig
-            if (config.url.isBlank()) return@launch
+                if (config.url.isBlank()) {
+                    _syncStatus.value = SyncStatus(SyncStage.FAILED, "未配置 WebDAV 地址", isError = true)
+                    return@launch
+                }
 
-            // 1. Download remote state
-            val remoteState = syncService.download(config)
-            
-            if (remoteState == null) {
-                // Remote doesn't exist or error, try uploading local
-                syncService.upload(config, _state.value)
-                return@launch
-            }
+                // 1. Pulling
+                _syncStatus.value = SyncStatus(SyncStage.PULLING, "连接服务器中...")
+                val remoteState = try {
+                    syncService.download(config)
+                } catch (e: Exception) {
+                    _syncStatus.value = SyncStatus(SyncStage.FAILED, "拉取失败: ${e.message}", isError = true)
+                    return@launch
+                }
+                
+                if (remoteState == null) {
+                    // Remote doesn't exist, try initial upload
+                    _syncStatus.value = SyncStatus(SyncStage.PUSHING, "远程无数据，正在进行首次上传...")
+                    try {
+                        val success = syncService.upload(config, _state.value)
+                        if (success) {
+                            val now = Clock.System.now().toEpochMilliseconds()
+                            val newState = _state.value.copy(syncConfig = config.copy(lastSyncTime = now))
+                            updateState(newState)
+                            _syncStatus.value = SyncStatus(SyncStage.COMPLETED, "首次上传成功", lastSyncTime = now)
+                        } else {
+                            _syncStatus.value = SyncStatus(SyncStage.FAILED, "首次上传失败: 服务器拒绝请求", isError = true)
+                        }
+                    } catch (e: Exception) {
+                        _syncStatus.value = SyncStatus(SyncStage.FAILED, "首次上传失败: ${e.message}", isError = true)
+                    }
+                    return@launch
+                }
 
-            // 2. Simple Merge Strategy: Compare lastSyncTime or just merge based on ID/Date
-            // For now, let's implement a "Union Merge" for lists and "Latest wins" for simple values
-            val mergedState = mergeStates(_state.value, remoteState)
-            
-            // 3. Update local and remote
-            val finalState = mergedState.copy(
-                syncConfig = config.copy(lastSyncTime = Clock.System.now().toEpochMilliseconds())
-            )
-            updateState(finalState)
-            syncService.upload(config.copy(lastSyncTime = finalState.syncConfig.lastSyncTime), finalState)
+                // 2. Merging
+                _syncStatus.value = SyncStatus(SyncStage.MERGING, "正在对比本地与远程差异...")
+                val mergedState = mergeStates(_state.value, remoteState)
+                
+                // 3. Pushing
+                _syncStatus.value = SyncStatus(SyncStage.PUSHING, "正在保存合并后的数据到远程...")
+                val now = Clock.System.now().toEpochMilliseconds()
+                val finalConfig = config.copy(lastSyncTime = now)
+                val finalState = mergedState.copy(syncConfig = finalConfig)
+                
+                val pushSuccess = syncService.upload(finalConfig, finalState)
+                if (pushSuccess) {
+                    updateState(finalState)
+                    _syncStatus.value = SyncStatus(SyncStage.COMPLETED, "同步成功", lastSyncTime = now)
+                } else {
+                    _syncStatus.value = SyncStatus(SyncStage.FAILED, "推送更新失败", isError = true)
+                }
             } catch (e: Exception) {
-                // Error handling
+                _syncStatus.value = SyncStatus(SyncStage.FAILED, "同步发生异常: ${e.message}", isError = true)
             } finally {
                 isSyncing = false
+                // 3秒后回到空闲状态，但保留上次同步时间
+                delay(3000)
+                if (_syncStatus.value.stage == SyncStage.COMPLETED || _syncStatus.value.stage == SyncStage.FAILED) {
+                    _syncStatus.value = _syncStatus.value.copy(stage = SyncStage.IDLE, message = "")
+                }
             }
         }
     }

@@ -248,6 +248,7 @@ fun AddMacroDialog(onDismiss: () -> Unit, onConfirm: (Double, String) -> Unit) {
 @Composable
 fun SyncConfigDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
     val state by viewModel.state.collectAsState()
+    val syncStatus by viewModel.syncStatus.collectAsState()
     
     var url by remember { mutableStateOf(state.syncConfig.url) }
     var path by remember { mutableStateOf(state.syncConfig.path) }
@@ -259,7 +260,7 @@ fun SyncConfigDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text("WebDAV 同步配置") },
         text = {
-            Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp).verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
@@ -294,20 +295,55 @@ fun SyncConfigDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
                     Text("开启自动同步 (每 2 分钟)")
                 }
                 
-                if (state.syncConfig.lastSyncTime > 0) {
-                    Text(
-                        "上次同步: ${formatTimestamp(state.syncConfig.lastSyncTime)}",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                    )
+                Divider(modifier = Modifier.padding(vertical = 12.dp))
+                
+                // 同步状态显示区
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("同步状态", style = MaterialTheme.typography.subtitle2, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (syncStatus.stage != com.wfbarn.ui.SyncStage.IDLE && syncStatus.stage != com.wfbarn.ui.SyncStage.COMPLETED && syncStatus.stage != com.wfbarn.ui.SyncStage.FAILED) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = if (syncStatus.stage == com.wfbarn.ui.SyncStage.IDLE) "准备就绪" else syncStatus.stage.displayName,
+                            color = when {
+                                syncStatus.isError -> Color.Red
+                                syncStatus.stage == com.wfbarn.ui.SyncStage.COMPLETED -> Color(0xFF4CAF50)
+                                else -> MaterialTheme.colors.onSurface
+                            },
+                            fontSize = 14.sp
+                        )
+                    }
+                    
+                    if (syncStatus.message.isNotEmpty()) {
+                        Text(
+                            text = syncStatus.message,
+                            fontSize = 12.sp,
+                            color = if (syncStatus.isError) Color.Red else MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                    
+                    if (syncStatus.lastSyncTime > 0) {
+                        Text(
+                            "上次同步: ${formatTimestamp(syncStatus.lastSyncTime)}",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             }
         },
         confirmButton = {
             Row {
-                TextButton(onClick = {
-                    viewModel.syncData()
-                }) {
+                TextButton(
+                    onClick = { viewModel.syncData() },
+                    enabled = syncStatus.stage == com.wfbarn.ui.SyncStage.IDLE || syncStatus.stage == com.wfbarn.ui.SyncStage.COMPLETED || syncStatus.stage == com.wfbarn.ui.SyncStage.FAILED
+                ) {
                     Text("立即同步")
                 }
                 Button(onClick = {
