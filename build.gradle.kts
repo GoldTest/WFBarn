@@ -83,12 +83,12 @@ android {
 
     signingConfigs {
         create("release") {
-            val storeFilePath = System.getenv("ANDROID_SIGNING_STORE_FILE")
-            if (storeFilePath != null) {
+            val storeFilePath = System.getenv("ANDROID_SIGNING_STORE_FILE")?.trim()
+            if (!storeFilePath.isNullOrBlank()) {
                 storeFile = file(storeFilePath)
-                storePassword = System.getenv("ANDROID_SIGNING_STORE_PASSWORD")
-                keyAlias = System.getenv("ANDROID_SIGNING_KEY_ALIAS")
-                keyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")
+                storePassword = System.getenv("ANDROID_SIGNING_STORE_PASSWORD")?.trim()
+                keyAlias = System.getenv("ANDROID_SIGNING_KEY_ALIAS")?.trim()
+                keyPassword = System.getenv("ANDROID_SIGNING_KEY_PASSWORD")?.trim()
             } else {
                 // Fallback to debug if secrets are not available
                 val debugConfig = signingConfigs.getByName("debug")
