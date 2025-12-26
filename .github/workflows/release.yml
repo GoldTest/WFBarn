@@ -30,7 +30,8 @@ jobs:
         run: |
           $keystore_base64 = "${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}"
           if (-not [string]::IsNullOrEmpty($keystore_base64)) {
-            [System.Convert]::FromBase64String($keystore_base64) | Set-Content -Path "release.keystore" -Encoding Byte
+            $bytes = [System.Convert]::FromBase64String($keystore_base64)
+            [IO.File]::WriteAllBytes("release.keystore", $bytes)
             echo "keystore_path=release.keystore" >> $env:GITHUB_OUTPUT
           }
 
