@@ -57,11 +57,21 @@ data class MacroRecord(
 )
 
 @Serializable
+data class SyncConfig(
+    val url: String = "",
+    val username: String = "",
+    val password: String = "",
+    val autoSync: Boolean = false,
+    val lastSyncTime: Long = 0
+)
+
+@Serializable
 data class AppState(
     val assets: List<Asset> = emptyList(),
     val dailyRecords: List<DailyProfitLoss> = emptyList(),
     val transactions: List<Transaction> = emptyList(),
     val macroRecords: List<MacroRecord> = emptyList(),
     val monthlyBudgets: Map<String, Double> = emptyMap(), // key: "YYYY-MM"
-    val isDarkMode: Boolean = false
+    val isDarkMode: Boolean = false,
+    val syncConfig: SyncConfig = SyncConfig()
 )

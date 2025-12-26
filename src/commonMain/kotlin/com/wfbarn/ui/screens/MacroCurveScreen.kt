@@ -7,7 +7,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -15,8 +17,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.text.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wfbarn.models.SyncConfig
 import com.wfbarn.ui.MainViewModel
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalTextApi::class)
@@ -56,7 +61,26 @@ fun MacroCurveScreen(viewModel: MainViewModel) {
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(scrollState)) {
-        Text("宏观经济曲线", style = MaterialTheme.typography.h5)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("宏观经济曲线", style = MaterialTheme.typography.h5)
+            
+            var showSyncConfig by remember { mutableStateOf(false) }
+            IconButton(onClick = { showSyncConfig = true }) {
+                Icon(Icons.Default.Sync, contentDescription = "Sync Config")
+            }
+            
+            if (showSyncConfig) {
+                SyncConfigDialog(
+                    viewModel = viewModel,
+                    onDismiss = { showSyncConfig = false }
+                )
+            }
+        }
+        
         Spacer(modifier = Modifier.height(8.dp))
         Text("红色：总资产 | 蓝色：当日消费", style = MaterialTheme.typography.caption)
         Spacer(modifier = Modifier.height(16.dp))
@@ -219,4 +243,85 @@ fun AddMacroDialog(onDismiss: () -> Unit, onConfirm: (Double, String) -> Unit) {
             }
         }
     )
+}
+
+@Composable
+fun SyncConfigDialog(viewModel: MainViewModel, onDismiss: () -> Unit) {
+    val state by viewModel.state.collectAsState()
+    
+    var url by remember { mutableStateOf(state.syncConfig.url) }
+    var username by remember { mutableStateOf(state.syncConfig.username) }
+    var password by remember { mutableStateOf(state.syncConfig.password) }
+    var autoSync by remember { mutableStateOf(state.syncConfig.autoSync) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("WebDAV 同步配置") },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    label = { Text("WebDAV 地址") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("用户名") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("密码") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = autoSync, onCheckedChange = { autoSync = it })
+                    Text("开启自动同步 (每 2 分钟)")
+                }
+                
+                if (state.syncConfig.lastSyncTime > 0) {
+                    Text(
+                        "上次同步: ${formatTimestamp(state.syncConfig.lastSyncTime)}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Row {
+                TextButton(onClick = {
+                    viewModel.syncData()
+                }) {
+                    Text("立即同步")
+                }
+                Button(onClick = {
+                    viewModel.updateSyncConfig(
+                        SyncConfig(url, username, password, autoSync, state.syncConfig.lastSyncTime)
+                    )
+                    onDismiss()
+                }) {
+                    Text("保存")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
+}
+
+fun formatTimestamp(timestamp: Long): String {
+    val date = java.util.Date(timestamp)
+    val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+    return sdf.format(date)
 }

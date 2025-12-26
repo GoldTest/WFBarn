@@ -78,13 +78,13 @@ fun App(viewModel: MainViewModel, isDesktop: Boolean = false) {
                             label = { Text("流水") }
                         )
                         BottomNavigationItem(
-                            selected = currentScreen == Screen.MACRO_CURVE,
-                            onClick = { currentScreen = Screen.MACRO_CURVE },
-                            icon = { Icon(Icons.Default.ShowChart, "Macro") },
-                            label = { Text("宏观") }
-                        )
-                    }
+                        selected = currentScreen == Screen.MACRO_CURVE,
+                        onClick = { currentScreen = Screen.MACRO_CURVE },
+                        icon = { Icon(Icons.Default.ShowChart, "Macro") },
+                        label = { Text("宏观") }
+                    )
                 }
+            }
             }
         ) { padding ->
             Row(modifier = Modifier.fillMaxSize().padding(padding)) {

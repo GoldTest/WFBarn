@@ -34,6 +34,14 @@ kotlin {
                 implementation(compose.materialIconsExtended)
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+                
+                val ktorVersion = "2.3.7"
+                implementation("io.ktor:ktor-client-core:$ktorVersion")
+                implementation("io.ktor:ktor-client-auth:$ktorVersion")
+                implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+                implementation("io.ktor:ktor-client-logging:$ktorVersion")
             }
         }
         
@@ -42,12 +50,16 @@ kotlin {
                 implementation("androidx.activity:activity-compose:1.8.0")
                 implementation("androidx.appcompat:appcompat:1.6.1")
                 implementation("androidx.core:core-ktx:1.12.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+                implementation("io.ktor:ktor-client-android:2.3.7")
             }
         }
         
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.7.3")
+                implementation("io.ktor:ktor-client-okhttp:2.3.7")
             }
         }
     }
@@ -59,7 +71,7 @@ android {
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+    sourceSets["main"].resources.srcDirs("src/commonMain/resources", "src/desktopMain/resources")
 
     defaultConfig {
         applicationId = "com.wfbarn"
@@ -99,7 +111,7 @@ compose.desktop {
             windows {
                 shortcut = true
                 menu = true
-                // iconFile.set(project.file("src/main/resources/windows/WFBarn.ico"))
+                iconFile.set(project.file("src/desktopMain/resources/windows/WFBarn.ico"))
             }
 
             modules("java.sql", "java.desktop", "jdk.unsupported", "java.instrument")
