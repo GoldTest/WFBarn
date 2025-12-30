@@ -208,7 +208,35 @@ class MainViewModel(
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val asset = _state.value.assets.find { it.id == assetId } ?: return
         
-        val newBalance = asset.currentAmount + profitLoss
+        // 获取昨天的余额（即该资产在今天之前的最后一条记录的余额，如果没有则使用初始金额）
+        val lastBalance = _state.value.dailyRecords
+            .filter { it.assetId == assetId && it.date < today }
+            .maxByOrNull { it.date }
+            ?.balance ?: asset.initialAmount
+            
+        val newBalance = lastBalance + profitLoss
+        val newRecord = DailyProfitLoss(today, assetId, profitLoss, newBalance)
+        
+        val newAssets = _state.value.assets.map {
+            if (it.id == assetId) it.copy(currentAmount = newBalance) else it
+        }
+        
+        val newRecords = _state.value.dailyRecords.filterNot { it.date == today && it.assetId == assetId } + newRecord
+        
+        updateState(_state.value.copy(assets = newAssets, dailyRecords = newRecords))
+    }
+
+    fun updateDailyBalance(assetId: String, newBalance: Double) {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val asset = _state.value.assets.find { it.id == assetId } ?: return
+        
+        // 获取昨天的余额
+        val lastBalance = _state.value.dailyRecords
+            .filter { it.assetId == assetId && it.date < today }
+            .maxByOrNull { it.date }
+            ?.balance ?: asset.initialAmount
+            
+        val profitLoss = newBalance - lastBalance
         val newRecord = DailyProfitLoss(today, assetId, profitLoss, newBalance)
         
         val newAssets = _state.value.assets.map {

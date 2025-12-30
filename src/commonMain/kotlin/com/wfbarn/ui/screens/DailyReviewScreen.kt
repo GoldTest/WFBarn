@@ -12,11 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.wfbarn.ui.MainViewModel
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun DailyReviewScreen(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsState()
+    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     
     Column(modifier = Modifier.fillMaxSize()) {
         Text("每日复盘", style = MaterialTheme.typography.h5)
@@ -28,7 +32,14 @@ fun DailyReviewScreen(viewModel: MainViewModel) {
         
         LazyColumn(modifier = Modifier.weight(0.5f)) {
             items(state.assets) { asset ->
+                // 获取昨天的余额
+                val lastBalance = state.dailyRecords
+                    .filter { it.assetId == asset.id && it.date < today }
+                    .maxByOrNull { it.date }
+                    ?.balance ?: asset.initialAmount
+
                 var profitLossInput by remember { mutableStateOf("") }
+                var balanceInput by remember { mutableStateOf("") }
                 
                 Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), elevation = 2.dp) {
                     Row(
@@ -38,21 +49,37 @@ fun DailyReviewScreen(viewModel: MainViewModel) {
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(asset.name, style = MaterialTheme.typography.subtitle1)
-                            Text("当前余额: ¥ ${String.format("%.2f", asset.currentAmount)}", style = MaterialTheme.typography.caption)
+                            Text("上次余额: ¥ ${String.format("%.2f", lastBalance)}", style = MaterialTheme.typography.caption)
                         }
                         
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             TextField(
                                 value = profitLossInput,
-                                onValueChange = { profitLossInput = it },
+                                onValueChange = { 
+                                    profitLossInput = it
+                                    val profit = it.toDoubleOrNull() ?: 0.0
+                                    balanceInput = String.format("%.2f", lastBalance + profit)
+                                },
                                 label = { Text("当日盈亏") },
-                                modifier = Modifier.width(120.dp)
+                                modifier = Modifier.width(100.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TextField(
+                                value = balanceInput,
+                                onValueChange = { 
+                                    balanceInput = it
+                                    val bal = it.toDoubleOrNull() ?: lastBalance
+                                    profitLossInput = String.format("%.2f", bal - lastBalance)
+                                },
+                                label = { Text("当前余额") },
+                                modifier = Modifier.width(100.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(onClick = {
-                                val value = profitLossInput.toDoubleOrNull() ?: 0.0
-                                viewModel.updateDailyProfitLoss(asset.id, value)
+                                val value = balanceInput.toDoubleOrNull() ?: lastBalance
+                                viewModel.updateDailyBalance(asset.id, value)
                                 profitLossInput = ""
+                                balanceInput = ""
                             }) {
                                 Text("更新")
                             }

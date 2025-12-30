@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wfbarn.models.SyncConfig
 import com.wfbarn.ui.MainViewModel
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalTextApi::class)
 @Composable
@@ -30,20 +33,26 @@ fun MacroCurveScreen(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
     val textMeasurer = rememberTextMeasurer()
+    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
     // 1. 计算每日总资产 (Red Curve)
     // 逻辑：对于每一个有记录的日期，计算所有资产在当日或当日之前的最新余额之和
     val allReviewDates = state.dailyRecords.map { it.date }.toSet()
     val allTransactionDates = state.transactions.map { it.date }.toSet()
-    val allDates = (allReviewDates + allTransactionDates).sortedBy { it.toString() }
+    val allDates = (allReviewDates + allTransactionDates + today).sortedBy { it.toString() }
 
     val dailyWealth = allDates.associateWith { date ->
-        state.assets.sumOf { asset ->
-            // 找到该资产在 date 或 date 之前的最后一条记录
-            state.dailyRecords
-                .filter { it.assetId == asset.id && it.date <= date }
-                .maxByOrNull { it.date }
-                ?.balance ?: asset.initialAmount
+        if (date == today) {
+            // 今天的数据直接使用各资产当前的余额之和，确保与首页一致
+            state.assets.sumOf { it.currentAmount }
+        } else {
+            state.assets.sumOf { asset ->
+                // 找到该资产在 date 或 date 之前的最后一条记录
+                state.dailyRecords
+                    .filter { it.assetId == asset.id && it.date <= date }
+                    .maxByOrNull { it.date }
+                    ?.balance ?: asset.initialAmount
+            }
         }
     }
 
