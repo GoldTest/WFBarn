@@ -6,6 +6,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -44,9 +45,19 @@ fun AppTheme(isDark: Boolean, content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun App(viewModel: MainViewModel, isDesktop: Boolean = false) {
+fun App(
+    viewModel: MainViewModel,
+    isDesktop: Boolean = false,
+    currentScreen: Screen = Screen.DASHBOARD,
+    onScreenChange: (Screen) -> Unit = {}
+) {
     val state by viewModel.state.collectAsState()
-    var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
+    var internalScreen by rememberSaveable { mutableStateOf(Screen.DASHBOARD) }
+    
+    val actualScreen = if (isDesktop) currentScreen else internalScreen
+    val setActualScreen: (Screen) -> Unit = { 
+        if (isDesktop) onScreenChange(it) else internalScreen = it 
+    }
 
     AppTheme(isDark = state.isDarkMode) {
         Scaffold(
@@ -54,37 +65,37 @@ fun App(viewModel: MainViewModel, isDesktop: Boolean = false) {
                 if (!isDesktop) {
                     BottomNavigation {
                         BottomNavigationItem(
-                            selected = currentScreen == Screen.DASHBOARD,
-                            onClick = { currentScreen = Screen.DASHBOARD },
+                            selected = actualScreen == Screen.DASHBOARD,
+                            onClick = { setActualScreen(Screen.DASHBOARD) },
                             icon = { Icon(Icons.Default.Dashboard, "Dashboard") },
                             label = { Text("总览") }
                         )
                         BottomNavigationItem(
-                            selected = currentScreen == Screen.ASSETS,
-                            onClick = { currentScreen = Screen.ASSETS },
+                            selected = actualScreen == Screen.ASSETS,
+                            onClick = { setActualScreen(Screen.ASSETS) },
                             icon = { Icon(Icons.Default.AccountBalance, "Assets") },
                             label = { Text("资产") }
                         )
                         BottomNavigationItem(
-                            selected = currentScreen == Screen.DAILY_REVIEW,
-                            onClick = { currentScreen = Screen.DAILY_REVIEW },
+                            selected = actualScreen == Screen.DAILY_REVIEW,
+                            onClick = { setActualScreen(Screen.DAILY_REVIEW) },
                             icon = { Icon(Icons.Default.EditCalendar, "Daily") },
                             label = { Text("复盘") }
                         )
                         BottomNavigationItem(
-                            selected = currentScreen == Screen.TRANSACTIONS,
-                            onClick = { currentScreen = Screen.TRANSACTIONS },
+                            selected = actualScreen == Screen.TRANSACTIONS,
+                            onClick = { setActualScreen(Screen.TRANSACTIONS) },
                             icon = { Icon(Icons.Default.History, "Transactions") },
                             label = { Text("流水") }
                         )
                         BottomNavigationItem(
-                        selected = currentScreen == Screen.MACRO_CURVE,
-                        onClick = { currentScreen = Screen.MACRO_CURVE },
-                        icon = { Icon(Icons.Default.ShowChart, "Macro") },
-                        label = { Text("宏观") }
-                    )
+                            selected = actualScreen == Screen.MACRO_CURVE,
+                            onClick = { setActualScreen(Screen.MACRO_CURVE) },
+                            icon = { Icon(Icons.Default.ShowChart, "Macro") },
+                            label = { Text("宏观") }
+                        )
+                    }
                 }
-            }
             }
         ) { padding ->
             Row(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -96,32 +107,32 @@ fun App(viewModel: MainViewModel, isDesktop: Boolean = false) {
                         elevation = 8.dp
                     ) {
                         NavigationRailItem(
-                            selected = currentScreen == Screen.DASHBOARD,
-                            onClick = { currentScreen = Screen.DASHBOARD },
+                            selected = actualScreen == Screen.DASHBOARD,
+                            onClick = { setActualScreen(Screen.DASHBOARD) },
                             icon = { Icon(Icons.Default.Dashboard, "Dashboard") },
                             label = { Text("总览") }
                         )
                         NavigationRailItem(
-                            selected = currentScreen == Screen.ASSETS,
-                            onClick = { currentScreen = Screen.ASSETS },
+                            selected = actualScreen == Screen.ASSETS,
+                            onClick = { setActualScreen(Screen.ASSETS) },
                             icon = { Icon(Icons.Default.AccountBalance, "Assets") },
                             label = { Text("资产") }
                         )
                         NavigationRailItem(
-                            selected = currentScreen == Screen.DAILY_REVIEW,
-                            onClick = { currentScreen = Screen.DAILY_REVIEW },
+                            selected = actualScreen == Screen.DAILY_REVIEW,
+                            onClick = { setActualScreen(Screen.DAILY_REVIEW) },
                             icon = { Icon(Icons.Default.EditCalendar, "Daily") },
                             label = { Text("复盘") }
                         )
                         NavigationRailItem(
-                            selected = currentScreen == Screen.TRANSACTIONS,
-                            onClick = { currentScreen = Screen.TRANSACTIONS },
+                            selected = actualScreen == Screen.TRANSACTIONS,
+                            onClick = { setActualScreen(Screen.TRANSACTIONS) },
                             icon = { Icon(Icons.Default.History, "Transactions") },
                             label = { Text("流水") }
                         )
                         NavigationRailItem(
-                            selected = currentScreen == Screen.MACRO_CURVE,
-                            onClick = { currentScreen = Screen.MACRO_CURVE },
+                            selected = actualScreen == Screen.MACRO_CURVE,
+                            onClick = { setActualScreen(Screen.MACRO_CURVE) },
                             icon = { Icon(Icons.Default.ShowChart, "Macro") },
                             label = { Text("宏观") }
                         )
@@ -131,23 +142,17 @@ fun App(viewModel: MainViewModel, isDesktop: Boolean = false) {
                         NavigationRailItem(
                             selected = false,
                             onClick = { viewModel.toggleDarkMode() },
-                            icon = { 
-                                Icon(
-                                    if (state.isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                    "Toggle Dark Mode"
-                                ) 
-                            },
+                            icon = { Icon(if (state.isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode, "Theme") },
                             label = { Text(if (state.isDarkMode) "浅色" else "深色") }
                         )
                     }
                 }
 
-                // Main Content
-                Box(modifier = Modifier.fillMaxSize().padding(if (isDesktop) 16.dp else 8.dp)) {
+                Box(modifier = Modifier.weight(1f).padding(16.dp)) {
                     AnimatedContent(
-                        targetState = currentScreen,
+                        targetState = actualScreen,
                         transitionSpec = {
-                            fadeIn() togetherWith fadeOut()
+                            fadeIn() with fadeOut()
                         }
                     ) { screen ->
                         when (screen) {

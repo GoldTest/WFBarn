@@ -8,11 +8,13 @@ import androidx.compose.ui.unit.dp
 import com.wfbarn.service.StorageService
 import com.wfbarn.ui.MainViewModel
 import com.wfbarn.App
+import com.wfbarn.Screen
 
 fun main() = application {
     val storageService = remember { StorageService() }
     val viewModel = remember { MainViewModel(storageService) }
     var isOpen by remember { mutableStateOf(true) }
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.DASHBOARD) }
     val trayState = rememberTrayState()
     
     // 加载图标
@@ -41,7 +43,12 @@ fun main() = application {
                 height = 800.dp
             )
         ) {
-            App(viewModel, isDesktop = true)
+            App(
+                viewModel = viewModel,
+                isDesktop = true,
+                currentScreen = currentScreen,
+                onScreenChange = { currentScreen = it }
+            )
         }
     }
 }
