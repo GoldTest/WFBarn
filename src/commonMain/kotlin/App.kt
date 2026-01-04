@@ -48,13 +48,14 @@ fun AppTheme(isDark: Boolean, content: @Composable () -> Unit) {
 fun App(
     viewModel: MainViewModel,
     isDesktop: Boolean = false,
-    currentScreen: Screen = Screen.DASHBOARD,
+    initialScreen: Screen = Screen.DASHBOARD,
+    showAddDialog: Boolean = false,
     onScreenChange: (Screen) -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
-    var internalScreen by rememberSaveable { mutableStateOf(Screen.DASHBOARD) }
+    var internalScreen by rememberSaveable { mutableStateOf(initialScreen) }
     
-    val actualScreen = if (isDesktop) currentScreen else internalScreen
+    val actualScreen = if (isDesktop) initialScreen else internalScreen
     val setActualScreen: (Screen) -> Unit = { 
         if (isDesktop) onScreenChange(it) else internalScreen = it 
     }
@@ -159,7 +160,7 @@ fun App(
                             Screen.DASHBOARD -> DashboardScreen(viewModel)
                             Screen.ASSETS -> AssetsScreen(viewModel)
                             Screen.DAILY_REVIEW -> DailyReviewScreen(viewModel)
-                            Screen.TRANSACTIONS -> TransactionsScreen(viewModel)
+                            Screen.TRANSACTIONS -> TransactionsScreen(viewModel, showAddDialogOnInit = showAddDialog)
                             Screen.MACRO_CURVE -> MacroCurveScreen(viewModel)
                         }
                     }

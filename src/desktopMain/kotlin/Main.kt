@@ -46,7 +46,7 @@ fun main() = application {
             App(
                 viewModel = viewModel,
                 isDesktop = true,
-                currentScreen = currentScreen,
+                initialScreen = currentScreen,
                 onScreenChange = { currentScreen = it }
             )
         }

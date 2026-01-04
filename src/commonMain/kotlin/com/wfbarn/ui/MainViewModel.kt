@@ -264,6 +264,15 @@ class MainViewModel(
         updateState(_state.value.copy(transactions = _state.value.transactions + transaction))
     }
 
+    fun updateTransaction(id: String, type: TransactionType, amount: Double, category: String, note: String, date: kotlinx.datetime.LocalDate) {
+        val newTransactions = _state.value.transactions.map {
+            if (it.id == id) {
+                it.copy(type = type, amount = amount, category = category, note = note, date = date)
+            } else it
+        }
+        updateState(_state.value.copy(transactions = newTransactions))
+    }
+
     fun deleteTransaction(id: String) {
         val newTransactions = _state.value.transactions.filterNot { it.id == id }
         updateState(_state.value.copy(transactions = newTransactions))

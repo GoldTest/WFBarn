@@ -16,9 +16,13 @@ class MainActivity : ComponentActivity() {
         // On Android, we provide the files directory for storage
         val storageService = StorageService(filesDir)
         
+        val initialAction = intent.getStringExtra("action")
+        val initialScreen = if (initialAction == "add_transaction") Screen.TRANSACTIONS else Screen.DASHBOARD
+        val showAddDialog = initialAction == "add_transaction"
+
         setContent {
             val viewModel = remember { MainViewModel(storageService) }
-            App(viewModel, isDesktop = false)
+            App(viewModel, isDesktop = false, initialScreen = initialScreen, showAddDialog = showAddDialog)
         }
     }
 }
