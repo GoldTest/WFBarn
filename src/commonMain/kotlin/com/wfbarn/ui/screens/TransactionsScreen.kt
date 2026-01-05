@@ -38,8 +38,11 @@ fun TransactionsScreen(viewModel: MainViewModel, showAddDialogOnInit: Boolean = 
         }
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(it)) {
-            Text("资金流水 (收入/支出)", style = MaterialTheme.typography.h5, modifier = Modifier.padding(16.dp))
-            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "资金流水 (收入/支出)", 
+                style = MaterialTheme.typography.h5, 
+                modifier = Modifier.padding(16.dp)
+            )
             
             LazyColumn {
                 items(state.transactions.reversed(), key = { it.id }) { transaction ->
@@ -88,6 +91,7 @@ fun TransactionsScreen(viewModel: MainViewModel, showAddDialogOnInit: Boolean = 
 
     if (showDialog) {
         TransactionDialog(
+            viewModel = viewModel,
             transaction = editingTransaction,
             onDismiss = { showDialog = false },
             onConfirm = { type, amount, category, note, date ->
@@ -104,10 +108,23 @@ fun TransactionsScreen(viewModel: MainViewModel, showAddDialogOnInit: Boolean = 
 
 @Composable
 fun TransactionDialog(
+    viewModel: MainViewModel,
     transaction: Transaction? = null,
     onDismiss: () -> Unit, 
     onConfirm: (TransactionType, Double, String, String, LocalDate) -> Unit
 ) {
+    val state by viewModel.state.collectAsState()
+    val recentCategories = remember(state.transactions) {
+        state.transactions
+            .asSequence()
+            .filter { it.category.isNotBlank() }
+            .sortedByDescending { it.date }
+            .map { it.category }
+            .distinct()
+            .take(3)
+            .toList()
+    }
+
     var amount by remember { mutableStateOf(transaction?.amount?.toString() ?: "") }
     var category by remember { mutableStateOf(transaction?.category ?: "") }
     var note by remember { mutableStateOf(transaction?.note ?: "") }
@@ -139,6 +156,21 @@ fun TransactionDialog(
                     label = { Text("分类 (如: 工资, 餐饮)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                
+                if (recentCategories.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                        recentCategories.forEach { cat ->
+                            TextButton(
+                                onClick = { category = cat },
+                                modifier = Modifier.padding(end = 4.dp)
+                            ) {
+                                Text(cat, style = MaterialTheme.typography.caption)
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
                     value = note, 

@@ -54,6 +54,21 @@ fun App(
 ) {
     val state by viewModel.state.collectAsState()
     var internalScreen by rememberSaveable { mutableStateOf(initialScreen) }
+    var internalShowAddDialog by remember { mutableStateOf(showAddDialog) }
+
+    // 当外部传入的 showAddDialog 发生变化时更新内部状态
+    LaunchedEffect(showAddDialog) {
+        if (showAddDialog) {
+            internalShowAddDialog = true
+        }
+    }
+
+    // 当外部传入的 initialScreen 发生变化时更新内部状态
+    LaunchedEffect(initialScreen) {
+        if (!isDesktop) {
+            internalScreen = initialScreen
+        }
+    }
     
     val actualScreen = if (isDesktop) initialScreen else internalScreen
     val setActualScreen: (Screen) -> Unit = { 
@@ -160,7 +175,15 @@ fun App(
                             Screen.DASHBOARD -> DashboardScreen(viewModel)
                             Screen.ASSETS -> AssetsScreen(viewModel)
                             Screen.DAILY_REVIEW -> DailyReviewScreen(viewModel)
-                            Screen.TRANSACTIONS -> TransactionsScreen(viewModel, showAddDialogOnInit = showAddDialog)
+                            Screen.TRANSACTIONS -> TransactionsScreen(
+                                viewModel, 
+                                showAddDialogOnInit = internalShowAddDialog
+                            ).also {
+                                // 消费掉显示对话框的状态
+                                if (internalShowAddDialog) {
+                                    internalShowAddDialog = false
+                                }
+                            }
                             Screen.MACRO_CURVE -> MacroCurveScreen(viewModel)
                         }
                     }

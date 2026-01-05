@@ -16,7 +16,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 group = "com.wfbarn"
-version = "0.2.6"
+version = "0.2.7"
 
 kotlin {
     androidTarget()
@@ -78,8 +78,8 @@ android {
         applicationId = "com.wfbarn"
         minSdk = 24
         targetSdk = 34
-        versionCode = 16
-        versionName = "0.2.6"
+        versionCode = 17
+        versionName = "0.2.7"
     }
 
     signingConfigs {

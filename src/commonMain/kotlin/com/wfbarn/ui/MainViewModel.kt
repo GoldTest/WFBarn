@@ -36,7 +36,9 @@ class MainViewModel(
     private val storageService: StorageService,
     private val syncService: SyncService = SyncService()
 ) {
-    private val _state = MutableStateFlow(storageService.loadState())
+    private val _state = MutableStateFlow(storageService.loadState().let { state ->
+        state.copy(transactions = state.transactions.map { it.copy(category = it.category.trim()) })
+    })
     val state: StateFlow<AppState> = _state
 
     private val _syncStatus = MutableStateFlow(SyncStatus(lastSyncTime = _state.value.syncConfig.lastSyncTime))
@@ -255,7 +257,7 @@ class MainViewModel(
             date = today,
             type = type,
             amount = amount,
-            category = category,
+            category = category.trim(),
             note = note
         )
         
@@ -267,7 +269,7 @@ class MainViewModel(
     fun updateTransaction(id: String, type: TransactionType, amount: Double, category: String, note: String, date: kotlinx.datetime.LocalDate) {
         val newTransactions = _state.value.transactions.map {
             if (it.id == id) {
-                it.copy(type = type, amount = amount, category = category, note = note, date = date)
+                it.copy(type = type, amount = amount, category = category.trim(), note = note, date = date)
             } else it
         }
         updateState(_state.value.copy(transactions = newTransactions))
@@ -314,7 +316,9 @@ class MainViewModel(
     }
 
     private fun updateState(newState: AppState) {
-        _state.value = newState
-        storageService.saveState(newState)
+        val trimmedTransactions = newState.transactions.map { it.copy(category = it.category.trim()) }
+        val finalState = newState.copy(transactions = trimmedTransactions)
+        _state.value = finalState
+        storageService.saveState(finalState)
     }
 }
