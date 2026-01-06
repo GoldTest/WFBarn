@@ -48,7 +48,7 @@ class QuickAddWidget : GlanceAppWidget() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "WFBarn 快捷记账",
+                text = "谷仓 快捷记账",
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,

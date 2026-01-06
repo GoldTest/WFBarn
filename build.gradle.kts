@@ -125,10 +125,10 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
-            packageVersion = "0.2.6"
-            description = "WFBarn Money Management System"
-            copyright = "© 2025 WFBarn"
-            vendor = "WFBarn"
+            packageVersion = "0.3.0"
+            description = "谷仓财务管理系统"
+            copyright = "© 2025 谷仓 (WFBarn)"
+            vendor = "谷仓"
 
             windows {
                 shortcut = true

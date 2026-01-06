@@ -23,11 +23,11 @@ fun main() = application {
     Tray(
         state = trayState,
         icon = icon,
-        tooltip = "WFBarn Money Management System",
+        tooltip = "谷仓财务管理系统",
             menu = {
-                Item("Show Window", onClick = { isOpen = true })
+                Item("显示窗口", onClick = { isOpen = true })
                 Separator()
-                Item("Exit Application", onClick = { exitApplication() })
+                Item("退出应用", onClick = { exitApplication() })
             },
         onAction = { isOpen = true }
     )
@@ -35,7 +35,7 @@ fun main() = application {
     if (isOpen) {
         Window(
             onCloseRequest = { isOpen = false },
-            title = "WFBarn - 财务管理系统",
+            title = "谷仓 - 财务管理系统",
             icon = icon,
             state = rememberWindowState(
                 position = WindowPosition(androidx.compose.ui.Alignment.TopCenter),

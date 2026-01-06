@@ -16,18 +16,18 @@
   <circle cx="256" cy="256" r="220" fill="none" stroke="white" stroke-width="15" opacity="0.3" />
 
   <!-- Graph Line -->
-  <path d="M140 340 L 200 280 L 260 310 L 370 180" 
+  <path d="M140 280 L 200 220 L 260 250 L 370 120" 
         stroke="white" stroke-width="25" fill="none" stroke-linecap="round" stroke-linejoin="round" />
   
   <!-- Arrow Head -->
-  <path d="M340 180 L 370 180 L 370 210" 
+  <path d="M340 120 L 370 120 L 370 150" 
         stroke="white" stroke-width="25" fill="none" stroke-linecap="round" stroke-linejoin="round" />
 
   <!-- Coins/Dots -->
-  <circle cx="200" cy="280" r="12" fill="white" />
-  <circle cx="260" cy="310" r="12" fill="white" />
-  <circle cx="140" cy="340" r="12" fill="white" />
+  <circle cx="200" cy="220" r="12" fill="white" />
+  <circle cx="260" cy="250" r="12" fill="white" />
+  <circle cx="140" cy="280" r="12" fill="white" />
 
   <!-- Currency Symbol (¥) -->
-  <text x="256" y="440" font-family="Arial, sans-serif" font-weight="bold" font-size="80" fill="white" text-anchor="middle" opacity="0.8">WFBarn</text>
+  <text x="256" y="470" font-family="Arial, sans-serif" font-weight="bold" font-size="160" fill="#FF5252" text-anchor="middle" opacity="1.0">谷仓</text>
 </svg>
