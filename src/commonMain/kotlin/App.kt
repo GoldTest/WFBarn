@@ -65,7 +65,7 @@ fun App(
 
     // 当外部传入的 initialScreen 发生变化时更新内部状态
     LaunchedEffect(initialScreen) {
-        if (!isDesktop) {
+        if (!isDesktop && initialScreen != Screen.DASHBOARD) {
             internalScreen = initialScreen
         }
     }
