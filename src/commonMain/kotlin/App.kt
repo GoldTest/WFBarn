@@ -164,7 +164,7 @@ fun App(
                     AnimatedContent(
                         targetState = actualScreen,
                         transitionSpec = {
-                            fadeIn() with fadeOut()
+                            fadeIn() togetherWith fadeOut()
                         }
                     ) { screen ->
                         when (screen) {

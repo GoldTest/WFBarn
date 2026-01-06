@@ -126,7 +126,7 @@ compose.desktop {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
             packageVersion = "0.3.0"
-            description = "谷仓财务管理系统"
+            description = "WFBarn Money Management System"
             copyright = "Copyright © 2025 WFBarn"
             vendor = "WFBarn"
 

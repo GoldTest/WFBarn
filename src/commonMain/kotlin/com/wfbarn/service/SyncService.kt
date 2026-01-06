@@ -29,7 +29,6 @@ class SyncService {
     }
 
     private fun createClient(config: SyncConfig): HttpClient {
-        val fullUrl = getFullUrl(config)
         return HttpClient {
             install(ContentNegotiation) {
                 json(json)
@@ -143,8 +142,7 @@ class SyncService {
         val client = createClient(config)
         return try {
             // WebDAV PROPFIND would be better, but HEAD might work if server supports it
-            val response: HttpResponse = client.head(fullUrl)
-            val lastModified = response.headers[HttpHeaders.LastModified]
+            client.head(fullUrl)
             // Simple parsing of HTTP date if needed, or just return 0 for now to force sync
             // For now, let's just return 0 and rely on manual sync/lastSyncTime
             0
