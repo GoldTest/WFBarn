@@ -127,8 +127,8 @@ compose.desktop {
             packageName = "WFBarn"
             packageVersion = "0.3.0"
             description = "谷仓财务管理系统"
-            copyright = "© 2025 谷仓 (WFBarn)"
-            vendor = "谷仓"
+            copyright = "Copyright © 2025 WFBarn"
+            vendor = "WFBarn"
 
             windows {
                 shortcut = true
