@@ -49,24 +49,20 @@ fun App(
     viewModel: MainViewModel,
     isDesktop: Boolean = false,
     initialScreen: Screen = Screen.DASHBOARD,
-    showAddDialog: Boolean = false,
+    action: String? = null,
+    onActionHandled: () -> Unit = {},
     onScreenChange: (Screen) -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
     var internalScreen by rememberSaveable { mutableStateOf(initialScreen) }
-    var internalShowAddDialog by remember { mutableStateOf(showAddDialog) }
+    var internalShowAddDialog by remember { mutableStateOf(false) }
 
-    // 当外部传入的 showAddDialog 发生变化时更新内部状态
-    LaunchedEffect(showAddDialog) {
-        if (showAddDialog) {
+    // 处理外部传入的 action
+    LaunchedEffect(action) {
+        if (action == "add_transaction") {
+            internalScreen = Screen.TRANSACTIONS
             internalShowAddDialog = true
-        }
-    }
-
-    // 当外部传入的 initialScreen 发生变化时更新内部状态
-    LaunchedEffect(initialScreen) {
-        if (!isDesktop && initialScreen != Screen.DASHBOARD) {
-            internalScreen = initialScreen
+            onActionHandled()
         }
     }
     
@@ -178,17 +174,19 @@ fun App(
                             Screen.TRANSACTIONS -> TransactionsScreen(
                                 viewModel, 
                                 showAddDialogOnInit = internalShowAddDialog
-                            ).also {
-                                // 消费掉显示对话框的状态
-                                if (internalShowAddDialog) {
-                                    internalShowAddDialog = false
-                                }
-                            }
+                            )
                             Screen.MACRO_CURVE -> MacroCurveScreen(viewModel)
                         }
                     }
                 }
             }
+        }
+    }
+
+    // 消费掉显示对话框的状态
+    LaunchedEffect(internalShowAddDialog) {
+        if (internalShowAddDialog) {
+            internalShowAddDialog = false
         }
     }
 }

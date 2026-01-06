@@ -16,7 +16,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 group = "com.wfbarn"
-version = "0.2.8"
+version = "0.2.9"
 
 kotlin {
     androidTarget()

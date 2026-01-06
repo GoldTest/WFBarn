@@ -24,22 +24,12 @@ class MainActivity : ComponentActivity() {
             val viewModel = remember { MainViewModel(storageService) }
             val currentAction by actionState
             
-            val initialScreen = if (currentAction == "add_transaction") Screen.TRANSACTIONS else Screen.DASHBOARD
-            val showAddDialog = currentAction == "add_transaction"
-
             App(
                 viewModel = viewModel, 
                 isDesktop = false, 
-                initialScreen = initialScreen, 
-                showAddDialog = showAddDialog
+                action = currentAction,
+                onActionHandled = { actionState.value = null }
             )
-            
-            // 重置 actionState，避免配置更改（如旋转屏幕）时重复弹出
-            LaunchedEffect(currentAction) {
-                if (currentAction != null) {
-                    actionState.value = null
-                }
-            }
         }
     }
 
