@@ -22,10 +22,22 @@ import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TransactionsScreen(viewModel: MainViewModel, showAddDialogOnInit: Boolean = false) {
+fun TransactionsScreen(
+    viewModel: MainViewModel, 
+    showAddDialogOnInit: Boolean = false,
+    onDialogShown: () -> Unit = {}
+) {
     val state by viewModel.state.collectAsState()
     var showDialog by remember { mutableStateOf(showAddDialogOnInit) }
     var editingTransaction by remember { mutableStateOf<Transaction?>(null) }
+
+    LaunchedEffect(showAddDialogOnInit) {
+        if (showAddDialogOnInit) {
+            editingTransaction = null
+            showDialog = true
+            onDialogShown()
+        }
+    }
 
     Scaffold(
         floatingActionButton = {

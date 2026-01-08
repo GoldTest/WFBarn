@@ -173,20 +173,14 @@ fun App(
                             Screen.DAILY_REVIEW -> DailyReviewScreen(viewModel)
                             Screen.TRANSACTIONS -> TransactionsScreen(
                                 viewModel, 
-                                showAddDialogOnInit = internalShowAddDialog
+                                showAddDialogOnInit = internalShowAddDialog,
+                                onDialogShown = { internalShowAddDialog = false }
                             )
                             Screen.MACRO_CURVE -> MacroCurveScreen(viewModel)
                         }
                     }
                 }
             }
-        }
-    }
-
-    // 消费掉显示对话框的状态
-    LaunchedEffect(internalShowAddDialog) {
-        if (internalShowAddDialog) {
-            internalShowAddDialog = false
         }
     }
 }
