@@ -10,6 +10,10 @@ import com.wfbarn.ui.MainViewModel
 import com.wfbarn.App
 import java.io.File
 
+import androidx.lifecycle.lifecycleScope
+import androidx.glance.appwidget.updateAll
+import kotlinx.coroutines.launch
+
 class MainActivity : ComponentActivity() {
     private var actionState = mutableStateOf<String?>(null)
 
@@ -21,7 +25,17 @@ class MainActivity : ComponentActivity() {
         val storageService = StorageService(filesDir)
         
         setContent {
-            val viewModel = remember { MainViewModel(storageService) }
+            val viewModel = remember { 
+                MainViewModel(
+                    storageService = storageService,
+                    onStateChanged = {
+                        lifecycleScope.launch {
+                            QuickAddWidget().updateAll(this@MainActivity)
+                            BudgetWidget().updateAll(this@MainActivity)
+                        }
+                    }
+                ) 
+            }
             val currentAction by actionState
             
             App(

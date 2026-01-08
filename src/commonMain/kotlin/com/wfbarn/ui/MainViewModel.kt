@@ -34,7 +34,8 @@ data class SyncStatus(
 
 class MainViewModel(
     private val storageService: StorageService,
-    private val syncService: SyncService = SyncService()
+    private val syncService: SyncService = SyncService(),
+    private val onStateChanged: (() -> Unit)? = null
 ) {
     private val _state = MutableStateFlow(storageService.loadState().let { state ->
         state.copy(transactions = state.transactions.map { it.copy(category = it.category.trim()) })
@@ -320,5 +321,6 @@ class MainViewModel(
         val finalState = newState.copy(transactions = trimmedTransactions)
         _state.value = finalState
         storageService.saveState(finalState)
+        onStateChanged?.invoke()
     }
 }

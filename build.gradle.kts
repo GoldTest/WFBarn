@@ -125,7 +125,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
             packageName = "WFBarn"
-            packageVersion = "0.3.1"
+            packageVersion = "0.3.2"
             description = "WFBarn Money Management System"
             copyright = "Copyright © 2025 WFBarn"
             vendor = "WFBarn"
