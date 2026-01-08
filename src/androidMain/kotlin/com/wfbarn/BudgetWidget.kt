@@ -78,57 +78,47 @@ class BudgetWidget : GlanceAppWidget() {
             modifier = GlanceModifier
                 .fillMaxSize()
                 .background(ColorProvider(Color.White))
-                .padding(8.dp),
+                .padding(6.dp),
             horizontalAlignment = Alignment.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "谷仓 预算进度 ($currentMonthKey)",
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    color = ColorProvider(Color.Black)
-                )
-            )
-            Spacer(modifier = GlanceModifier.height(4.dp))
-            
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "本月预算: ¥${totalBudget.toInt()}",
-                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(Color.Gray))
+                    text = "谷仓预算",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = ColorProvider(Color.Black)
+                    )
                 )
-                Spacer(modifier = GlanceModifier.width(8.dp))
+                Spacer(modifier = GlanceModifier.width(4.dp))
                 Text(
-                    text = "已花: ¥${spent.toInt()}",
-                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(Color.Red))
+                    text = currentMonthKey,
+                    style = TextStyle(fontSize = 10.sp, color = ColorProvider(Color.Gray))
                 )
             }
             
-            Spacer(modifier = GlanceModifier.height(4.dp))
-            Text(
-                text = "剩余额度: ¥${String.format("%.1f", remainingBudget)}",
-                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 13.sp, color = ColorProvider(Color(0xFF2E7D32)))
-            )
+            Row(modifier = GlanceModifier.padding(vertical = 2.dp)) {
+                Text(
+                    text = "余:¥${String.format("%.0f", remainingBudget)}",
+                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp, color = ColorProvider(Color(0xFF2E7D32)))
+                )
+                Spacer(modifier = GlanceModifier.width(6.dp))
+                Text(
+                    text = "已花:¥${spent.toInt()}",
+                    style = TextStyle(fontSize = 11.sp, color = ColorProvider(Color.Red))
+                )
+            }
             
-            Spacer(modifier = GlanceModifier.height(4.dp))
-            Text(
-                text = "今日建议:",
-                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 12.sp, color = ColorProvider(Color.Black))
-            )
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "早: ¥${breakfast.toInt()}",
-                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(Color.DarkGray))
+                    text = "建议:",
+                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 11.sp, color = ColorProvider(Color.Black))
                 )
-                Spacer(modifier = GlanceModifier.width(6.dp))
+                Spacer(modifier = GlanceModifier.width(4.dp))
                 Text(
-                    text = "午: ¥${lunchDinner.toInt()}",
-                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(Color.DarkGray))
-                )
-                Spacer(modifier = GlanceModifier.width(6.dp))
-                Text(
-                    text = "晚: ¥${lunchDinner.toInt()}",
-                    style = TextStyle(fontSize = 12.sp, color = ColorProvider(Color.DarkGray))
+                    text = "早¥${breakfast.toInt()} 午晚¥${lunchDinner.toInt()}",
+                    style = TextStyle(fontSize = 11.sp, color = ColorProvider(Color.DarkGray))
                 )
             }
         }

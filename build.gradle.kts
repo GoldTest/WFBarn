@@ -16,7 +16,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 group = "com.wfbarn"
-version = "0.2.10"
+version = "0.3.3"
 
 kotlin {
     androidTarget()
@@ -78,8 +78,8 @@ android {
         applicationId = "com.wfbarn"
         minSdk = 24
         targetSdk = 34
-        versionCode = 18
-        versionName = "0.2.8"
+        versionCode = 21
+        versionName = "0.3.3"
     }
 
     signingConfigs {
@@ -124,9 +124,9 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Exe, TargetFormat.Msi)
-            packageName = "WFBarn"
-            packageVersion = "0.3.2"
-            description = "WFBarn Money Management System"
+        packageName = "WFBarn"
+        packageVersion = "0.3.3"
+        description = "WFBarn Money Management System"
             copyright = "Copyright © 2025 WFBarn"
             vendor = "WFBarn"
 
