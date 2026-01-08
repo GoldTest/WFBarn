@@ -77,9 +77,9 @@ class BudgetWidget : GlanceAppWidget() {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(ColorProvider(Color.White))
+                .background(GlanceTheme.colors.background)
                 .padding(6.dp),
-            horizontalAlignment = Alignment.Start,
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -88,37 +88,37 @@ class BudgetWidget : GlanceAppWidget() {
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
-                        color = ColorProvider(Color.Black)
+                        color = GlanceTheme.colors.onBackground
                     )
                 )
                 Spacer(modifier = GlanceModifier.width(4.dp))
                 Text(
                     text = currentMonthKey,
-                    style = TextStyle(fontSize = 10.sp, color = ColorProvider(Color.Gray))
+                    style = TextStyle(fontSize = 10.sp, color = GlanceTheme.colors.onSurfaceVariant)
                 )
             }
             
-            Row(modifier = GlanceModifier.padding(vertical = 2.dp)) {
+            Row(modifier = GlanceModifier.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "余:¥${String.format("%.0f", remainingBudget)}",
-                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp, color = ColorProvider(Color(0xFF2E7D32)))
+                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp, color = ColorProvider(day = Color(0xFF2E7D32), night = Color(0xFF81C784)))
                 )
                 Spacer(modifier = GlanceModifier.width(6.dp))
                 Text(
                     text = "已花:¥${spent.toInt()}",
-                    style = TextStyle(fontSize = 11.sp, color = ColorProvider(Color.Red))
+                    style = TextStyle(fontSize = 11.sp, color = ColorProvider(day = Color.Red, night = Color(0xFFFF8A80)))
                 )
             }
             
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "建议:",
-                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 11.sp, color = ColorProvider(Color.Black))
+                    style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 11.sp, color = GlanceTheme.colors.onBackground)
                 )
                 Spacer(modifier = GlanceModifier.width(4.dp))
                 Text(
                     text = "早¥${breakfast.toInt()} 午晚¥${lunchDinner.toInt()}",
-                    style = TextStyle(fontSize = 11.sp, color = ColorProvider(Color.DarkGray))
+                    style = TextStyle(fontSize = 11.sp, color = GlanceTheme.colors.onSurfaceVariant)
                 )
             }
         }

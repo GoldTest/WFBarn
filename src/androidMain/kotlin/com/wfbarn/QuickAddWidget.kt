@@ -42,7 +42,7 @@ class QuickAddWidget : GlanceAppWidget() {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(ColorProvider(Color.White))
+                .background(GlanceTheme.colors.background)
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalAlignment = Alignment.CenterVertically
@@ -52,7 +52,7 @@ class QuickAddWidget : GlanceAppWidget() {
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = ColorProvider(Color.Black)
+                    color = GlanceTheme.colors.onBackground
                 )
             )
             Spacer(modifier = GlanceModifier.height(8.dp))
